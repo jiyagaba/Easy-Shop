@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import "@fortawesome/fontawesome-free/css/all.min.css";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+// import { faEnvelope, faLock } from "@fortawesome/free-solid-svg-icons";
+import { faEnvelope } from "@fortawesome/free-solid-svg-icons/faEnvelope";
+import { faLock } from "@fortawesome/free-solid-svg-icons/faLock";
 
 const AdminLogin = () => {
   const [state, setState] = useState({
@@ -37,7 +40,7 @@ const AdminLogin = () => {
 
       if (response.ok) {
         setMessage("✅ Admin logged in successfully!");
-        navigate("/admin-dashboard"); // Redirect to Admin Dashboard
+        navigate("/admin-dashboard");
       } else {
         setMessage(`❌ ${data.message || "Login failed"}`);
       }
@@ -68,7 +71,10 @@ const AdminLogin = () => {
               onChange={inputHandle}
               className="w-full p-4 pl-12 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#6f68d1] text-lg bg-slate-100"
             />
-            <i className="absolute left-4 top-4 text-gray-500 fa fa-envelope text-lg"></i>
+            <FontAwesomeIcon
+              icon={faEnvelope}
+              className="absolute left-4 top-4 text-gray-500 text-lg"
+            />
           </div>
 
           <div className="relative mb-4">
@@ -80,7 +86,10 @@ const AdminLogin = () => {
               onChange={inputHandle}
               className="w-full p-4 pl-12 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#6f68d1] text-lg bg-slate-100"
             />
-            <i className="absolute left-4 top-4 text-gray-500 fa fa-lock text-lg"></i>
+            <FontAwesomeIcon
+              icon={faLock}
+              className="absolute left-4 top-4 text-gray-500 text-lg"
+            />
           </div>
 
           {message && (

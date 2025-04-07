@@ -1,60 +1,48 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { registerSeller, clearStatus } from "../features/seller/sellerSlice";
 import "@fortawesome/fontawesome-free/css/all.min.css";
-
-const API_URL = "http://localhost:3000/api/seller/register"; // Seller Signup API
 
 const SellerRegister = () => {
   const [state, setState] = useState({
-    sellername: "", 
-    email: "", 
-    password: "", 
-    store_name: "", // Ensuring consistency with backend
-    role: "seller", // Default seller role
+    sellername: "",
+    email: "",
+    password: "",
+    store_name: "",
+    role: "seller",
   });
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
-
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { loading, error, success } = useSelector((state) => state.seller);
 
   const inputHandle = (e) => {
-    setState((prevState) => ({
-      ...prevState,
-      [e.target.name]: e.target.value || "", // Ensuring no undefined values
+    const { name, value } = e.target;
+    setState((prev) => ({
+      ...prev,
+      [name]: value,
     }));
   };
 
-  const submit = async (e) => {
+  const submit = (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
-    setSuccess(null);
-
-    try {
-      const response = await fetch(API_URL, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(state),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Seller signup failed");
-      }
-
-      setSuccess("Seller account created! Please verify your email.");
-      setTimeout(() => navigate("/seller-login"), 3000);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    dispatch(registerSeller(state));
   };
+
+  // Clear status when component mounts
+  useEffect(() => {
+    dispatch(clearStatus());
+  }, [dispatch]);
+
+  // Navigate to login on success
+  useEffect(() => {
+    if (success) {
+      const timeout = setTimeout(() => navigate("/seller-login"), 3000);
+      return () => clearTimeout(timeout);
+    }
+  }, [success, navigate]);
 
   return (
     <div className="w-screen h-screen flex justify-center items-center bg-[#cdcae9]">
@@ -64,21 +52,23 @@ const SellerRegister = () => {
         transition={{ type: "spring", stiffness: 60 }}
         className="w-[800px] min-h-[550px] flex bg-white rounded-lg shadow-lg overflow-hidden"
       >
+        {/* Left Side - Registration Form */}
         <div className="w-1/2 h-full flex flex-col justify-center p-8">
           <h2 className="text-3xl font-bold text-gray-800 mb-4">Seller Registration</h2>
           {error && <p className="text-red-500 mb-2">{error}</p>}
           {success && <p className="text-green-500 mb-2">{success}</p>}
-          <form className="w-full" onSubmit={submit}>
+          
+          <form onSubmit={submit}>
             {[
               { name: "sellername", type: "text", placeholder: "Username", icon: "fa-user" },
               { name: "email", type: "email", placeholder: "Email", icon: "fa-envelope" },
               { name: "password", type: "password", placeholder: "Password", icon: "fa-lock" },
-              { name: "store_name", type: "text", placeholder: "Store Name", icon: "fa-store" }, 
+              { name: "store_name", type: "text", placeholder: "Store Name", icon: "fa-store" },
             ].map(({ name, type, placeholder, icon }) => (
               <div className="relative mb-4" key={name}>
                 <input
                   onChange={inputHandle}
-                  value={state[name] || ""} // Prevents undefined values
+                  value={state[name]}
                   name={name}
                   type={type}
                   placeholder={placeholder}
@@ -88,15 +78,18 @@ const SellerRegister = () => {
                 <i className={`absolute left-4 top-4 text-gray-500 fa ${icon} text-lg`}></i>
               </div>
             ))}
+
             <button
               type="submit"
-              className="w-full mt-4 bg-[#6f68d1] hover:shadow-lg text-white font-bold py-3 text-lg rounded-md"
               disabled={loading}
+              className="w-full mt-4 bg-[#6f68d1] hover:shadow-lg text-white font-bold py-3 text-lg rounded-md"
             >
               {loading ? "Registering..." : "Register as Seller"}
             </button>
           </form>
         </div>
+
+        {/* Right Side - Redirect to Login */}
         <div className="w-1/2 bg-[#6f68d1] flex flex-col justify-center items-center text-white p-8 rounded-l-[100px]">
           <h2 className="text-2xl font-bold">Already a Seller?</h2>
           <p className="mt-2">Log in to manage your store.</p>

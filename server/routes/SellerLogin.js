@@ -64,7 +64,19 @@ router.post("/", async (req, res) => {
       { expiresIn: "1h" }
     );
 
-    res.status(200).json({ message: "✅ Seller login successful", token });
+    // ✅ Updated response with sellername
+    res.status(200).json({
+      message: "✅ Seller login successful",
+      token,
+      user: {
+        id: seller.id,
+        sellername: seller.sellername,
+       
+        email: seller.email,
+        role: "seller"
+      }
+  
+    });
   } catch (error) {
     console.error("❌ Seller Login Error:", error);
     res.status(500).json({ message: "Internal Server Error" });

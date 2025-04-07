@@ -3,6 +3,17 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
+// ✅ Decode JWT payload
+const decodeJWT = (token) => {
+  try {
+    const payload = token.split(".")[1];
+    return JSON.parse(atob(payload));
+  } catch (e) {
+    console.error("Invalid token", e);
+    return null;
+  }
+};
+
 const SellerLogin = () => {
   const [state, setState] = useState({
     email: "",
@@ -36,8 +47,20 @@ const SellerLogin = () => {
       console.log(data);
 
       if (response.ok) {
+        // Decode token (optional: for debug/logging)
+        decodeJWT(data.token);
+
+        // ✅ Store in localStorage from response
+        if (data.user) {
+          localStorage.setItem("token", data.token);
+          localStorage.setItem("id", data.user.id);
+          localStorage.setItem("email", data.user.email);
+          localStorage.setItem("role", data.user.role);
+          localStorage.setItem("name", data.user.sellername); // ✅ sellername stored
+        }
+
         setMessage("✅ Seller logged in successfully!");
-        navigate("/seller-dashboard"); // Redirect to seller dashboard
+        navigate("/seller-dashboard");
       } else {
         setMessage(`❌ ${data.message || "Login failed"}`);
       }
