@@ -7,10 +7,8 @@ router.get("/", async (req, res) => {
   try {
     const [products] = await db.execute(`
       SELECT p.id, p.name AS title, p.price, p.discount, p.brand, p.stock, 
-             p.category, p.description, MAX(pi.image_path) AS img
+             p.category, p.description, p.image AS img
       FROM products p
-      LEFT JOIN product_images pi ON p.id = pi.product_id
-      GROUP BY p.id, p.name, p.price, p.discount, p.brand, p.stock, p.category, p.description
     `);
 
     res.status(200).json(products);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Search from './Search';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom'; // ✅ Import useLocation
 import Pagination from '../views/Pagination';
 import { FaEdit, FaEye, FaTrash } from 'react-icons/fa';
 
@@ -9,6 +9,8 @@ const Prodsall = () => {
   const [searchValue, setSearchValue] = useState('');
   const [parPage, setParPage] = useState(5);
   const [products, setProducts] = useState([]);
+
+  const location = useLocation(); // ✅ Use useLocation to fix ESLint warning
 
   // Fetch products
   useEffect(() => {
@@ -31,7 +33,26 @@ const Prodsall = () => {
     };
 
     fetchProducts();
-  }, []);
+  }, [location]); // ✅ location from useLocation hook
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this product?")) {
+      try {
+        const response = await fetch(`http://localhost:3000/api/products/${id}`, {
+          method: "DELETE",
+        });
+
+        if (response.ok) {
+          alert("Product deleted successfully");
+          setProducts(products.filter((product) => product.id !== id));
+        } else {
+          alert("Failed to delete product");
+        }
+      } catch (error) {
+        console.error("Error deleting product:", error.message);
+      }
+    }
+  };
 
   const startIndex = (currentPage - 1) * parPage;
 
@@ -119,7 +140,10 @@ const Prodsall = () => {
                     >
                       <FaEye />
                     </Link>
-                    <button className='p-[6px] bg-red-500 rounded hover:shadow-lg hover:shadow-red-500/50'>
+                    <button
+                      onClick={() => handleDelete(product.id)}
+                      className='p-[6px] bg-red-500 rounded hover:shadow-lg hover:shadow-red-500/50'
+                    >
                       <FaTrash />
                     </button>
                   </div>
@@ -145,3 +169,5 @@ const Prodsall = () => {
 };
 
 export default Prodsall;
+
+

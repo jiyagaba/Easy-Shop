@@ -3,8 +3,8 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { IoMdImages } from "react-icons/io";
 
 const EditProduct = () => {
-    const { id } = useParams(); // Get product ID from the URL
-    const navigate = useNavigate(); // For navigation after update or delete
+    const { id } = useParams();
+    const navigate = useNavigate();
 
     const categorys = [
         { id: 1, name: 'Sports' },
@@ -16,7 +16,7 @@ const EditProduct = () => {
     ];
 
     const [state, setState] = useState({
-        name: "", description: '', discount: '', price: "", brand: "", stock: ""
+        name: "", description: "", discount: "", price: "", brand: "", stock: ""
     });
 
     const [cateShow, setCateShow] = useState(false);
@@ -25,22 +25,21 @@ const EditProduct = () => {
     const [searchValue, setSearchValue] = useState('');
     const [imageShow, setImageShow] = useState([]);
 
-    // Fetch product details when the component loads
     useEffect(() => {
         const fetchProduct = async () => {
             try {
-                const response = await fetch(`http://localhost:3000/api/products/${id}`);
+                const response = await fetch(`http://localhost:3000/api/products/view/${id}`);
                 const data = await response.json();
                 setState({
-                    name: data.name,
-                    description: data.description,
-                    discount: data.discount,
-                    price: data.price,
-                    brand: data.brand,
-                    stock: data.stock
+                    name: data.name || "",
+                    description: data.description || "",
+                    discount: data.discount || "",
+                    price: data.price || "",
+                    brand: data.brand || "",
+                    stock: data.stock || ""
                 });
-                setCategory(data.category);
-                setImageShow(data.images || []); // Assuming `images` is an array of image URLs
+                setCategory(data.category || '');
+                setImageShow([data.image ? `http://localhost:3000/uploads/${data.image}` : '']);
             } catch (error) {
                 console.error("Error fetching product:", error.message);
             }
@@ -61,13 +60,14 @@ const EditProduct = () => {
 
     const changeImage = (img, files, index) => {
         if (files.length > 0) {
+            const file = files[0];
             const reader = new FileReader();
             reader.onloadend = () => {
                 const updatedImages = [...imageShow];
-                updatedImages[index] = reader.result;
+                updatedImages[index] = file;
                 setImageShow(updatedImages);
             };
-            reader.readAsDataURL(files[0]);
+            reader.readAsDataURL(file);
         }
     };
 
@@ -75,24 +75,34 @@ const EditProduct = () => {
         setImageShow([...imageShow, '']);
     };
 
-    // Handle form submission to update the product
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        const formData = new FormData();
+        formData.append("name", state.name);
+        formData.append("description", state.description);
+        formData.append("discount", state.discount);
+        formData.append("price", state.price);
+        formData.append("brand", state.brand);
+        formData.append("stock", state.stock);
+        formData.append("category", category);
+
+        // Append each image to FormData if it's a File
+        imageShow.forEach((img) => {
+            if (img instanceof File) {
+                formData.append('image', img);
+            }
+        });
+
         try {
-            const response = await fetch(`http://localhost:3000/api/products/${id}`, {
+            const response = await fetch(`http://localhost:3000/api/products/update/${id}`, {
                 method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    ...state,
-                    category,
-                }),
+                body: formData
             });
 
             if (response.ok) {
                 alert("Product updated successfully");
-                navigate("/seller/dashboard/products"); // Redirect to the products page
+                navigate("/seller-dashboard/all-product");
             } else {
                 alert("Failed to update product");
             }
@@ -101,7 +111,6 @@ const EditProduct = () => {
         }
     };
 
-    // Handle product deletion
     const handleDelete = async () => {
         if (window.confirm("Are you sure you want to delete this product?")) {
             try {
@@ -111,7 +120,7 @@ const EditProduct = () => {
 
                 if (response.ok) {
                     alert("Product deleted successfully");
-                    navigate("/seller/dashboard/products"); // Redirect to the products page
+                    navigate("/seller-dashboard/all-product");
                 } else {
                     alert("Failed to delete product");
                 }
@@ -122,34 +131,34 @@ const EditProduct = () => {
     };
 
     return (
-        <div className="px-4 lg:px-8 pt-6">
-            <div className="bg-[#1e1e2f] border border-purple-500 shadow-[0_0_15px_#a855f7] rounded-xl p-6">
+        <div className="px-4 lg:px-8 pt-6 bg-[#1e1e2f] min-h-screen">
+            <div className="max-w-7xl mx-auto bg-[#1e1e2f] border border-purple-500 shadow-[0_0_15px_#a855f7] rounded-xl p-6">
                 <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-white text-lg font-semibold">Edit Product</h1>
-                    <Link to="/seller/dashboard/products" className="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-md shadow-md">
+                    <h1 className="text-white text-xl font-semibold">Edit Product</h1>
+                    <Link to="/seller-dashboard/all-product" className="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-md shadow-md">
                         All Products
                     </Link>
                 </div>
 
-                <form onSubmit={handleSubmit} className="text-white space-y-4">
-                    <div className="grid md:grid-cols-2 gap-4">
+                <form onSubmit={handleSubmit} className="text-white space-y-6">
+                    <div className="grid md:grid-cols-2 gap-6">
                         <div>
-                            <label htmlFor="name">Product Name</label>
-                            <input id="name" name="name" value={state.name} onChange={inputHandle} placeholder="Product Name"
-                                className="w-full px-4 py-2 mt-1 bg-[#2a2a40] border border-slate-700 rounded-md outline-none focus:border-purple-500" />
+                            <label className="block mb-1 font-medium">Product Name</label>
+                    <input name="name" value={state.name} onChange={inputHandle} placeholder="Product Name"
+                        className="input w-full text-gray-900" />
                         </div>
                         <div>
-                            <label htmlFor="brand">Product Brand</label>
-                            <input id="brand" name="brand" value={state.brand} onChange={inputHandle} placeholder="Brand Name"
-                                className="w-full px-4 py-2 mt-1 bg-[#2a2a40] border border-slate-700 rounded-md outline-none focus:border-purple-500" />
+                            <label className="block mb-1 font-medium">Product Brand</label>
+                    <input name="brand" value={state.brand} onChange={inputHandle} placeholder="Brand"
+                        className="input w-full text-gray-900" />
                         </div>
                     </div>
 
-                    <div className="grid md:grid-cols-2 gap-4">
+                    <div className="grid md:grid-cols-2 gap-6">
                         <div className="relative">
-                            <label htmlFor="category">Category</label>
-                            <input id="category" value={category} readOnly onClick={() => setCateShow(!cateShow)} placeholder="--select category--"
-                                className="w-full px-4 py-2 mt-1 bg-[#2a2a40] border border-slate-700 rounded-md outline-none cursor-pointer" />
+                            <label className="block mb-1 font-medium">Category</label>
+                            <input value={category} readOnly onClick={() => setCateShow(!cateShow)} placeholder="Select category"
+                                className="input cursor-pointer w-full text-gray-900" />
                             {cateShow && (
                                 <div className="absolute top-full z-10 w-full bg-[#1e1e2f] border border-slate-700 mt-1 rounded-md">
                                     <input
@@ -166,7 +175,7 @@ const EditProduct = () => {
                                                 setSearchValue('');
                                                 setAllCategory(categorys);
                                             }}
-                                                className={`px-4 py-2 cursor-pointer hover:bg-purple-600 ${category === c.name ? 'bg-purple-600 text-white' : ''}`}>
+                                                className={`px-4 py-2 cursor-pointer hover:bg-purple-600 ${category === c.name ? 'bg-purple-600 text-white' : ''}`} >
                                                 {c.name}
                                             </div>
                                         ))}
@@ -175,38 +184,38 @@ const EditProduct = () => {
                             )}
                         </div>
                         <div>
-                            <label htmlFor="stock">Product Stock</label>
-                            <input id="stock" name="stock" value={state.stock} onChange={inputHandle} placeholder="Stock"
-                                className="w-full px-4 py-2 mt-1 bg-[#2a2a40] border border-slate-700 rounded-md outline-none focus:border-purple-500" />
+                            <label className="block mb-1 font-medium">Stock</label>
+                            <input name="stock" value={state.stock} onChange={inputHandle} placeholder="Stock"
+                                className="input w-full text-gray-900" />
                         </div>
                     </div>
 
-                    <div className="grid md:grid-cols-2 gap-4">
+                    <div className="grid md:grid-cols-2 gap-6">
                         <div>
-                            <label htmlFor="price">Price</label>
-                            <input id="price" name="price" type="number" value={state.price} onChange={inputHandle} placeholder="Price"
-                                className="w-full px-4 py-2 mt-1 bg-[#2a2a40] border border-slate-700 rounded-md outline-none focus:border-purple-500" />
+                            <label className="block mb-1 font-medium">Price</label>
+                            <input name="price" type="number" value={state.price} onChange={inputHandle} placeholder="Price"
+                                className="input w-full text-gray-900" />
                         </div>
                         <div>
-                            <label htmlFor="discount">Discount</label>
-                            <input id="discount" name="discount" type="number" value={state.discount} onChange={inputHandle} placeholder="Discount by %"
-                                className="w-full px-4 py-2 mt-1 bg-[#2a2a40] border border-slate-700 rounded-md outline-none focus:border-purple-500" />
+                            <label className="block mb-1 font-medium">Discount</label>
+                            <input name="discount" type="number" value={state.discount} onChange={inputHandle} placeholder="Discount %"
+                                className="input w-full text-gray-900" />
                         </div>
                     </div>
 
                     <div>
-                        <label htmlFor="description">Description</label>
-                        <textarea id="description" name="description" value={state.description} onChange={inputHandle}
-                            placeholder="Description" rows="4"
-                            className="w-full px-4 py-2 mt-1 bg-[#2a2a40] border border-slate-700 rounded-md outline-none focus:border-purple-500"></textarea>
+                        <label className="block mb-1 font-medium">Description</label>
+                        <textarea name="description" value={state.description} onChange={inputHandle}
+                            placeholder="Description" rows="4" className="input w-full resize-none text-gray-900"></textarea>
                     </div>
 
-                    {/* Image grid section */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
                         {imageShow.map((img, i) => (
                             <div key={i} className="relative border border-slate-700 rounded-md overflow-hidden bg-[#2a2a40]">
                                 <label htmlFor={`img-${i}`} className="cursor-pointer block">
-                                    {img ? (
+                                    {img instanceof File ? (
+                                        <img src={URL.createObjectURL(img)} alt={`preview-${i}`} className="w-full h-36 object-cover rounded-md" />
+                                    ) : img ? (
                                         <img src={img} alt={`preview-${i}`} className="w-full h-36 object-cover rounded-md" />
                                     ) : (
                                         <div className="flex items-center justify-center w-full h-36 text-slate-400">

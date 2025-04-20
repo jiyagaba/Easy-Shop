@@ -1,61 +1,9 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Carousel from "react-multi-carousel";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import axios from "axios";
 import "react-multi-carousel/lib/styles.css";
-
-const discountedProducts = [
-  {
-    id: 1,
-    title: "Shoes",
-    image: "/images/products.webp",
-    price: "$199",
-    oldPrice: "$299",
-    sales: "800 Sales",
-    rating: "4.7",
-    reviews: "12",
-  },
-  {
-    id: 2,
-    title: "Headphones",
-    image: "/images/products.webp",
-    price: "$149",
-    oldPrice: "$249",
-    sales: "950 Sales",
-    rating: "4.9",
-    reviews: "22",
-  },
-  {
-    id: 3,
-    title: "Laptop",
-    image: "/images/products.webp",
-    price: "$99",
-    oldPrice: "$179",
-    sales: "500 Sales",
-    rating: "4.6",
-    reviews: "15",
-  },
-  {
-    id: 4,
-    title: "Tablet",
-    image: "/images/products.webp",
-    price: "$79",
-    oldPrice: "$149",
-    sales: "700 Sales",
-    rating: "4.8",
-    reviews: "18",
-  },
-  {
-    id: 5,
-    title: "Phone",
-    image: "/images/products.webp",
-    price: "$59",
-    oldPrice: "$129",
-    sales: "650 Sales",
-    rating: "4.5",
-    reviews: "10",
-  },
-];
 
 const responsive = {
   superLargeDesktop: { breakpoint: { max: 4000, min: 1024 }, items: 4 },
@@ -83,6 +31,41 @@ const CustomRightArrow = ({ onClick }) => (
 );
 
 const DiscountedProducts = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDiscountedProducts = async () => {
+      try {
+        const res = await axios.get("http://localhost:3000/api/products/discounted");
+        console.log("Fetched discounted products:", res.data);
+        setProducts(res.data || []);
+      } catch (err) {
+        console.error("Error fetching discounted products:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDiscountedProducts();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="text-center py-16">
+        <p className="text-gray-500">Loading discounted products...</p>
+      </div>
+    );
+  }
+
+  if (products.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <p className="text-gray-500">No discounted products available at the moment.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-gray-100 py-16">
       <div className="text-center">
@@ -99,25 +82,23 @@ const DiscountedProducts = () => {
           customRightArrow={<CustomRightArrow />}
           className="relative"
         >
-          {discountedProducts.map((product) => (
+          {products.map((product) => (
             <div key={product.id} className="p-4">
-              <Link to="#">
+              <Link to={`/product/${product.id}`}>
                 <div className="bg-white rounded-xl shadow-lg p-5 hover:shadow-xl transition">
                   <img
-                    src={product.image}
+                    src={`http://localhost:3000${product.img}`}
                     alt={product.title}
                     className="w-full h-52 object-cover rounded-lg"
+                    onError={(e) => { e.target.src = "/fallback.png"; }}
                   />
                   <div className="mt-4">
                     <h3 className="text-lg font-semibold text-gray-900">{product.title}</h3>
-                    <p className="text-gray-500 text-sm">by themePix</p>
+                    <p className="text-gray-500 text-sm">{product.category}</p>
                     <div className="mt-2 text-gray-900 font-bold text-lg">
-                      {product.price} <span className="text-gray-400 line-through">{product.oldPrice}</span>
+                      ${product.price} <span className="text-gray-400 line-through">${(product.price / (1 - product.discount / 100)).toFixed(2)}</span>
                     </div>
-                    <div className="mt-2 text-gray-600 text-sm">{product.sales}</div>
-                    <div className="mt-1 text-yellow-500 flex items-center">
-                      ⭐ {product.rating} ({product.reviews} Reviews)
-                    </div>
+                    <div className="mt-2 text-gray-600 text-sm">{product.stock} in stock</div>
                     <button className="mt-3 px-4 py-2 bg-blue-500 text-white rounded-full text-sm hover:bg-blue-600 transition">
                       View
                     </button>
