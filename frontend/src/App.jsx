@@ -30,6 +30,7 @@ import SellerToCustomer from "./pages/SellertoCustomer";
 import SellerToAdmin from "./pages/SellerToAdmin";
 import Profile from "./pages/Profile";
 import EditProduct from "./pages/EditProduct";
+// import CustomerDashboard from "./pages/CustomerDashboard";
 
 function App() {
   return (
@@ -44,7 +45,9 @@ function App() {
         <Route path="/shops" element={<Shops />} />
         <Route path="/card" element={<Card />} />
         <Route path="/product/details/:id" element={<Details />} />
-
+        <Route path="/dashboard" element={<Profile/>}/>
+        
+        
         {/* Admin Dashboard Layout */}
         <Route path="/admin-dashboard" element={<MainLayout />}>
           <Route index element={<AdminDashboard />} />
@@ -75,6 +78,8 @@ function App() {
         
 
         </Route>
+      
+        
 
       </Routes>
     </BrowserRouter>

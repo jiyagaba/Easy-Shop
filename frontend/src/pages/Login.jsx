@@ -1,3 +1,4 @@
+// pages/login.js
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -12,6 +13,7 @@ const Login = () => {
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
 
+  // Handle input changes
   const inputHandle = (e) => {
     setState({
       ...state,
@@ -19,30 +21,41 @@ const Login = () => {
     });
   };
 
-  const submit = async (e) => {
+  // Handle login logic
+  const handleLogin = async (e) => {
     e.preventDefault();
     setMessage("Logging in...");
 
     try {
-      const response = await fetch("http://localhost:3000/api/login", {
+      const res = await fetch("http://localhost:3000/api/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(state),
+        body: JSON.stringify({ email: state.email, password: state.password }), // Use form input values
+        headers: { "Content-Type": "application/json" },
       });
 
-      const data = await response.json();
-      console.log(data);
+      const data = await res.json();
 
-      if (response.ok) {
-        setMessage("✅ User logged in successfully!");
-        navigate("/"); // Redirect to dashboard after successful login
+      if (res.ok) {
+        // Log the user data before saving it
+        console.log("Login Response:", data);
+        console.log("Login successful. Saving user data:", data.user);
+        console.log("Token:", data.token);
+
+        // Save user data and token
+        localStorage.setItem("user", JSON.stringify(data.user)); // Store user data
+        localStorage.setItem("token", data.token);              // Store token
+
+        // Ensure data is saved before redirection
+        if (localStorage.getItem("user") && localStorage.getItem("token")) {
+          window.location.href = "/";  // Redirect to the dashboard
+        } else {
+          setMessage("❌ Error saving data. Please try again.");
+        }
       } else {
-        setMessage(`❌ ${data.message || "Login failed"}`);
+        setMessage(data.message || "Login failed"); // Show error if login fails
       }
     } catch (error) {
-      console.error(error);
+      console.error("Login error:", error);
       setMessage("❌ Error connecting to server. Please try again.");
     }
   };
@@ -70,7 +83,7 @@ const Login = () => {
         {/* Right Section - Login Form */}
         <div className="w-1/2 h-full flex flex-col justify-center p-8 min-h-[500px]">
           <h2 className="text-3xl font-bold text-gray-800 mb-4">Login</h2>
-          <form className="w-full" onSubmit={submit}>
+          <form className="w-full" onSubmit={handleLogin}>
             <div className="relative mb-4">
               <input
                 name="email"
@@ -101,9 +114,7 @@ const Login = () => {
 
             {message && (
               <p
-                className={`mt-4 text-lg font-semibold ${
-                  message.includes("✅") ? "text-green-600" : "text-red-600"
-                }`}
+                className={`mt-4 text-lg font-semibold ${message.includes("✅") ? "text-green-600" : "text-red-600"}`}
               >
                 {message}
               </p>

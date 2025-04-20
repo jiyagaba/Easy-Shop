@@ -1,14 +1,12 @@
-const bcrypt = require('bcryptjs');
+const bcrypt = require("bcryptjs");
 
-const hashPassword = async (req, res, next) => {
-  console.log("hash middleware")
-  console.log(req.body)
+const hashPassword = async (password) => {
   try {
-    const hashedPassword = await bcrypt.hash(req.body.password, 10);
-    req.body.password = hashedPassword;
-    next();
+    const salt = await bcrypt.genSalt(10);  // Generate salt
+    const hashedPassword = await bcrypt.hash(password, salt);  // Hash password
+    return hashedPassword;
   } catch (error) {
-    next(error);
+    throw new Error("Password hashing failed");
   }
 };
 

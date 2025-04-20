@@ -1,18 +1,8 @@
+// pages/seller-login.js
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import "@fortawesome/fontawesome-free/css/all.min.css";
-
-// ✅ Decode JWT payload
-const decodeJWT = (token) => {
-  try {
-    const payload = token.split(".")[1];
-    return JSON.parse(atob(payload));
-  } catch (e) {
-    console.error("Invalid token", e);
-    return null;
-  }
-};
 
 const SellerLogin = () => {
   const [state, setState] = useState({
@@ -30,7 +20,7 @@ const SellerLogin = () => {
     });
   };
 
-  const submit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setMessage("Logging in...");
 
@@ -40,32 +30,38 @@ const SellerLogin = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(state),
+        body: JSON.stringify({
+          email: state.email,
+          password: state.password,
+        }),
       });
 
       const data = await response.json();
-      console.log(data);
+      console.log("Login Response:", data);
 
       if (response.ok) {
-        // Decode token (optional: for debug/logging)
-        decodeJWT(data.token);
+        console.log("Login successful. Saving seller data:", data.user);
+        console.log("Token:", data.token);
 
-        // ✅ Store in localStorage from response
-        if (data.user) {
-          localStorage.setItem("token", data.token);
-          localStorage.setItem("id", data.user.id);
-          localStorage.setItem("email", data.user.email);
-          localStorage.setItem("role", data.user.role);
-          localStorage.setItem("name", data.user.sellername); // ✅ sellername stored
+        // Save seller data and tokens
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("refreshToken", data.refreshToken);
+        localStorage.setItem("user", JSON.stringify(data.user));
+
+        if (
+          localStorage.getItem("token") &&
+          localStorage.getItem("refreshToken") &&
+          localStorage.getItem("user")
+        ) {
+          window.location.href = "/seller-dashboard";
+        } else {
+          setMessage("❌ Error saving data. Please try again.");
         }
-
-        setMessage("✅ Seller logged in successfully!");
-        navigate("/seller-dashboard");
       } else {
-        setMessage(`❌ ${data.message || "Login failed"}`);
+        setMessage(data.message || "❌ Login failed");
       }
     } catch (error) {
-      console.error(error);
+      console.error("Login error:", error);
       setMessage("❌ Error connecting to server. Please try again.");
     }
   };
@@ -93,7 +89,7 @@ const SellerLogin = () => {
         {/* Right Section - Seller Login Form */}
         <div className="w-1/2 h-full flex flex-col justify-center p-8 min-h-[500px]">
           <h2 className="text-3xl font-bold text-gray-800 mb-4">Seller Login</h2>
-          <form className="w-full" onSubmit={submit}>
+          <form className="w-full" onSubmit={handleLogin}>
             <div className="relative mb-4">
               <input
                 name="email"

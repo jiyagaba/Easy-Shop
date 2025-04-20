@@ -9,9 +9,7 @@ dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET;
 
 router.post("/", async (req, res) => {
-  console.log("🔥 Seller login route hit");
-  console.log("📩 Incoming request:", req.body);
-
+  console.log("Seller login route hit");
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -33,21 +31,14 @@ router.post("/", async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    console.log("🗝️ Entered Password:", password);
-    console.log("🔒 Stored Password in DB:", seller.password);
-
-    // If the password in the database is not hashed, hash it and update the DB
+    // If password is not hashed, hash and update it in the DB
     if (!seller.password.startsWith("$2b$")) {
-      console.log("🔄 Password stored in plain text, updating to hashed version...");
       const hashedPassword = await bcrypt.hash(seller.password, 10);
       await db.execute("UPDATE sellers SET password = ? WHERE email = ?", [hashedPassword, normalizedEmail]);
       seller.password = hashedPassword;
     }
 
-    // 🔑 Compare entered password with stored hashed password
     const isPasswordValid = await bcrypt.compare(password, seller.password);
-
-    console.log("🔑 Password Match Status:", isPasswordValid);
 
     if (!isPasswordValid) {
       return res.status(401).json({ message: "Invalid email or password" });
@@ -61,24 +52,21 @@ router.post("/", async (req, res) => {
     const token = jwt.sign(
       { id: seller.id, email: seller.email, role: "seller" },
       JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: process.env.JWT_EXPIRES_IN || "1h" }
     );
 
-    // ✅ Updated response with sellername
+    const { password: _, ...sellerWithoutPassword } = seller;
+
     res.status(200).json({
-      message: "✅ Seller login successful",
+      message: "Login successful",
       token,
       user: {
-        id: seller.id,
-        sellername: seller.sellername,
-       
-        email: seller.email,
-        role: "seller"
-      }
-  
+        ...sellerWithoutPassword,
+        role: "seller",
+      },
     });
   } catch (error) {
-    console.error("❌ Seller Login Error:", error);
+    console.error("Seller Login Error:", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 });

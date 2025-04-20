@@ -10,5 +10,8 @@ const db = mysql.createPool({
   // connectionLimit: 10,
   queueLimit: 0,
 });
+db.getConnection()
+  .then(() => console.log("✅ MySQL Database Connected!"))
+  .catch((err) => console.error("❌ MySQL Database Connection Failed:", err.message));
 
 module.exports = db;

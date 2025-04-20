@@ -4,7 +4,8 @@ const dotenv = require("dotenv");
 const morgan = require("morgan");
 const db = require("./db");
 const errorHandler = require("./middlewares/errorHandler");
-
+const RefreshTokenRoute = require("./routes/RefreshToken");
+const tokenAuthentication = require("./middlewares/tokenAuthentication");
 dotenv.config();
 
 const app = express();
@@ -34,16 +35,29 @@ db.execute("SELECT 1")
     const signupRouter = require("./routes/signup");
     const loginRouter = require("./routes/login");
     const verifyRouter = require("./routes/verify");
-    const sellerloginroute=require("./routes/SellerLogin");
-    const sellerregisterroute=require("./routes/SellerRegister");
-    const adminlogin=require("./routes/adminlogin");
+    const sellerloginroute = require("./routes/SellerLogin");
+    const sellerregisterroute = require("./routes/SellerRegister");
+    const adminlogin = require("./routes/adminlogin");
+    const profileuser = require("./routes/profile");
+    const sellerprofile=require("./routes/seller");
+
+    // Public routes (no authentication)
     app.use("/api/signup", signupRouter);
     app.use("/api/login", loginRouter);
     app.use("/api/verify", verifyRouter);
-    app.use("/api/seller/login",sellerloginroute);
-    app.use("/api/seller/register",sellerregisterroute);
-    app.use("/api/admin/login",adminlogin);
+    app.use("/api/seller/login", sellerloginroute);
+    app.use("/api/seller/register", sellerregisterroute);
+    app.use("/api/admin/login", adminlogin);
+    app.use("/api/seller/refresh-token", RefreshTokenRoute);
+    // Protected routes (authentication required)
+    app.use("/api/profile",  profileuser);
+    app.use("/api/seller",sellerprofile);
 
+    app._router.stack.forEach((r) => {
+      if (r.route && r.route.path) {
+        console.log("Registered Route:", r.route.path);
+      }
+    });
 
     // ✅ 404 Handler
     app.use("*", (req, res) => {
@@ -58,12 +72,12 @@ db.execute("SELECT 1")
       console.log(`🚀 Server running at http://localhost:${port}`);
     });
 
+    // Log all registered routes
     app._router.stack.forEach((r) => {
       if (r.route && r.route.path) {
         console.log("Registered Route:", r.route.path);
       }
     });
-    
 
   })
   .catch((err) => {

@@ -1,22 +1,17 @@
 const express = require("express");
 const router = express.Router();
+const hashPassword = require("../Middlewares/hashPassword");  // Middleware to hash passwords
 const db = require("../db");
-const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
 const dotenv = require("dotenv");
 
 dotenv.config();
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-});
+const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
 
+// ✅ Seller Signup Route
 router.post("/", async (req, res) => {
-  console.log("🚀 Seller Registration API hit:", req.body);
+  console.log("🚀 Seller Signup Route hit");
+  console.log("Request body:", req.body);
 
   const { sellername, email, password, store_name } = req.body;
 
@@ -25,59 +20,37 @@ router.post("/", async (req, res) => {
   }
 
   try {
-    // Check if seller already exists
+    console.log("🔍 Checking if seller exists...");
     const [existingSellers] = await db.execute(
       "SELECT id FROM sellers WHERE sellername = ? OR email = ?",
       [sellername, email]
     );
 
     if (existingSellers.length > 0) {
-      return res
-        .status(400)
-        .json({ message: "Seller name or Email already taken" });
+      return res.status(400).json({ message: "Seller name or Email already taken" });
     }
 
-    // Generate verification token
-    const verificationToken = jwt.sign(
-      { email },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
+    const hashedPassword = await hashPassword(password);
+    console.log("🔐 Hashed Password:", hashedPassword);
+
+    const [result] = await db.execute(
+      `INSERT INTO sellers (sellername, email, password, store_name) VALUES (?, ?, ?, ?)`,
+      [sellername, email, hashedPassword, store_name]
     );
 
-    // Insert into DB
-    await db.execute(
-      `INSERT INTO sellers (sellername, email, password, store_name)
-       VALUES (?, ?, ?, ?)`,
-      [sellername, email, password, store_name]
-    );
+    console.log("✅ Seller inserted successfully:", result);
 
-    // Email Verification URL
-    const verificationUrl = `${process.env.BASE_URL}/api/seller/register/verify?token=${verificationToken}`;
-
-    // Send verification email (but don't crash if it fails)
-    try {
-      await transporter.sendMail({
-        from: `"Your App" <${process.env.EMAIL}>`,
-        to: email,
-        subject: "Verify Your Email",
-        html: `<p>Click <a href="${verificationUrl}">here</a> to verify your email.</p>`,
-      });
-
-      console.log("📧 Verification email sent to:", email);
-    } catch (emailError) {
-      console.warn("❗ Email sending failed:", emailError.message);
-    }
-
-    return res.status(201).json({
-      message: "Seller registration successful. Please verify your email.",
-    });
+    res.status(200).json({ message: "Seller signup successful" });
 
   } catch (error) {
-    console.error("❌ Registration Error:", error.message);
-    return res
-      .status(500)
-      .json({ message: "Internal Server Error", error: error.message });
+    console.error("❌ Error during seller signup:", error.message);
+    res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
+});
+
+// ✅ Optional: Seller Verify Route (currently just a placeholder)
+router.get("/verify", (req, res) => {
+  res.status(200).json({ message: "Seller email verification skipped." });
 });
 
 module.exports = router;

@@ -80,7 +80,7 @@ const AddProduct = () => {
       <div className='w-full p-6 bg-[#1e1e2f] rounded-xl border border-purple-500 shadow-[0_0_15px_#a855f7]'>
         <div className='flex justify-between items-center pb-5 border-b border-slate-700'>
           <h1 className='text-2xl font-semibold text-white'>Add Product</h1>
-          <Link to="/admin/dashboard/all-product" className='bg-purple-600 hover:bg-purple-700 text-white rounded-md px-6 py-2 text-sm shadow transition'>
+          <Link to="/seller-dashboard/all-product" className='bg-purple-600 hover:bg-purple-700 text-white rounded-md px-6 py-2 text-sm shadow transition'>
             All Products
           </Link>
         </div>

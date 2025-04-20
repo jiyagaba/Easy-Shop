@@ -1,54 +1,44 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { registerUser } from "../features/user/userThunk";
+import { clearStatus } from "../features/user/userSlice";
 import "@fortawesome/fontawesome-free/css/all.min.css";
-
-const API_URL = "http://localhost:3000/api/signup"; // Correct API URL
 
 const Register = () => {
   const [state, setState] = useState({ name: "", email: "", password: "" });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
-
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { loading, error, success } = useSelector((state) => state.user);
 
   const inputHandle = (e) => {
-    setState({ ...state, [e.target.name]: e.target.value });
+    setState({ ...state, [e.target.name]: e.target.value });  // Corrected typo here
   };
 
   const submit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
-    setSuccess(null);
 
-    try {
-      const response = await fetch(API_URL, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: state.name,
-          email: state.email,
-          password: state.password,
-        }),
-      });
+    const userData = {
+      name: state.name, // ✅ Correct key to match backend
+      email: state.email,
+      password: state.password,
+    };
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Signup failed");
-      }
-
-      setSuccess("Signup successful! Please verify your email.");
-      setTimeout(() => navigate("/login"), 2000);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    console.log("Form data being submitted:", userData);
+    dispatch(registerUser(userData));
   };
+
+  useEffect(() => {
+    dispatch(clearStatus());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (success) {
+      const timeout = setTimeout(() => navigate("/login"), 3000);
+      return () => clearTimeout(timeout);
+    }
+  }, [success, navigate]);
 
   return (
     <div className="w-screen h-screen flex justify-center items-center bg-[#cdcae9]">
@@ -56,14 +46,15 @@ const Register = () => {
         initial={{ x: "-100vw", opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ type: "spring", stiffness: 60 }}
-        className="w-[800px] min-h-[500px] flex bg-white rounded-lg shadow-lg overflow-hidden"
+        className="w-[800px] min-h-[550px] flex bg-white rounded-lg shadow-lg overflow-hidden"
       >
         <div className="w-1/2 h-full flex flex-col justify-center p-8">
-          <h2 className="text-3xl font-bold text-gray-800 mb-4">Register</h2>
+          <h2 className="text-3xl font-bold text-gray-800 mb-4">User Registration</h2>
           {error && <p className="text-red-500 mb-2">{error}</p>}
           {success && <p className="text-green-500 mb-2">{success}</p>}
-          <form className="w-full" onSubmit={submit}>
-            {[
+
+          <form onSubmit={submit}>
+            {[ 
               { name: "name", type: "text", placeholder: "Username", icon: "fa-user" },
               { name: "email", type: "email", placeholder: "Email", icon: "fa-envelope" },
               { name: "password", type: "password", placeholder: "Password", icon: "fa-lock" },
@@ -83,21 +74,22 @@ const Register = () => {
             ))}
             <button
               type="submit"
-              className="w-full mt-4 bg-[#6f68d1] hover:shadow-lg text-white font-bold py-3 text-lg rounded-md"
               disabled={loading}
+              className="w-full mt-4 bg-[#6f68d1] hover:shadow-lg text-white font-bold py-3 text-lg rounded-md"
             >
-              {loading ? "Registering..." : "Register"}
+              {loading ? "Registering..." : "Register as User"}
             </button>
           </form>
         </div>
+
         <div className="w-1/2 bg-[#6f68d1] flex flex-col justify-center items-center text-white p-8 rounded-l-[100px]">
-          <h2 className="text-2xl font-bold">Welcome Back!</h2>
-          <p className="mt-2">Already have an account?</p>
+          <h2 className="text-2xl font-bold">Already a User?</h2>
+          <p className="mt-2">Log in to access your account.</p>
           <button
             onClick={() => navigate("/login")}
             className="mt-4 border-2 bg-white text-[#6f68d1] hover:bg-[#5a54c7] hover:text-white font-bold py-3 px-8 rounded-md text-lg"
           >
-            Login
+            User Login
           </button>
         </div>
       </motion.div>

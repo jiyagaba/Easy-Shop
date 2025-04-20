@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { registerSeller, clearStatus } from "../features/seller/sellerSlice";
+import { registerSeller } from "../features/seller/sellerThunk";
+import { clearStatus } from "../features/seller/sellerSlice";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
 const SellerRegister = () => {
@@ -19,24 +20,28 @@ const SellerRegister = () => {
   const { loading, error, success } = useSelector((state) => state.seller);
 
   const inputHandle = (e) => {
-    const { name, value } = e.target;
-    setState((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setState({ ...state, [e.target.name]: e.target.value });
   };
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
-    dispatch(registerSeller(state));
+
+    const sellerData = {
+      sellername: state.sellername,
+      email: state.email,
+      password: state.password,
+      store_name: state.store_name,
+      role: "seller",
+    };
+
+    console.log("Form data being submitted:", sellerData);
+    dispatch(registerSeller(sellerData));
   };
 
-  // Clear status when component mounts
   useEffect(() => {
     dispatch(clearStatus());
   }, [dispatch]);
 
-  // Navigate to login on success
   useEffect(() => {
     if (success) {
       const timeout = setTimeout(() => navigate("/seller-login"), 3000);
@@ -57,7 +62,7 @@ const SellerRegister = () => {
           <h2 className="text-3xl font-bold text-gray-800 mb-4">Seller Registration</h2>
           {error && <p className="text-red-500 mb-2">{error}</p>}
           {success && <p className="text-green-500 mb-2">{success}</p>}
-          
+
           <form onSubmit={submit}>
             {[
               { name: "sellername", type: "text", placeholder: "Username", icon: "fa-user" },
