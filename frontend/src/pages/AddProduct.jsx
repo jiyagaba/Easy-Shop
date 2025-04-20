@@ -27,6 +27,7 @@ const AddProduct = () => {
   const [searchValue, setSearchValue] = useState('');
   const [images, setImages] = useState([]);
   const [imageShow, setImageShow] = useState([]);
+  const [message, setMessage] = useState("");
 
   const inputHandle = (e) => {
     setState({
@@ -75,6 +76,56 @@ const AddProduct = () => {
     setImageShow(updatedUrls);
   };
 
+  const submitProduct = async (e) => {
+    e.preventDefault();
+    setMessage("Submitting product...");
+
+    // Prepare form data
+    const formData = new FormData();
+    formData.append("name", state.name);
+    formData.append("description", state.description);
+    formData.append("discount", state.discount);
+    formData.append("price", state.price);
+    formData.append("brand", state.brand);
+    formData.append("stock", state.stock);
+    formData.append("category", category);
+    images.forEach((image, index) => {
+      formData.append(`images`, image); // Append each image
+    });
+
+    try {
+      const token = localStorage.getItem("token"); // Get token from localStorage
+      const response = await fetch("http://localhost:3000/api/seller/add-product", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`, // Include token in Authorization header
+        },
+        body: formData, // Send form data
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setMessage("✅ Product added successfully!");
+        setState({
+          name: "",
+          description: '',
+          discount: '',
+          price: "",
+          brand: "",
+          stock: ""
+        });
+        setCategory('');
+        setImages([]);
+        setImageShow([]);
+      } else {
+        setMessage(`❌ ${data.message || "Failed to add product"}`);
+      }
+    } catch (error) {
+      console.error("Error adding product:", error);
+      setMessage("❌ Error connecting to server. Please try again.");
+    }
+  };
+
   return (
     <div className='px-4 lg:px-8 py-6'>
       <div className='w-full p-6 bg-[#1e1e2f] rounded-xl border border-purple-500 shadow-[0_0_15px_#a855f7]'>
@@ -85,7 +136,7 @@ const AddProduct = () => {
           </Link>
         </div>
 
-        <form>
+        <form onSubmit={submitProduct}>
           <div className='flex flex-col md:flex-row gap-4 mt-6'>
             <div className='w-full'>
               <label className='block text-sm font-medium text-white mb-1'>Product Name</label>
@@ -175,6 +226,12 @@ const AddProduct = () => {
               </label>
             </div>
           </div>
+
+          {message && (
+            <p className={`mt-4 text-lg font-semibold ${message.includes("✅") ? "text-green-600" : "text-red-600"}`}>
+              {message}
+            </p>
+          )}
 
           <div className='mt-6'>
             <button type="submit"

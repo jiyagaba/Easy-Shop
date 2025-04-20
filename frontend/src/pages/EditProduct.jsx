@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { IoMdImages } from "react-icons/io";
 
 const EditProduct = () => {
+    const { id } = useParams(); // Get product ID from the URL
+    const navigate = useNavigate(); // For navigation after update or delete
+
     const categorys = [
         { id: 1, name: 'Sports' },
         { id: 2, name: 'Tshirt' },
@@ -16,22 +19,45 @@ const EditProduct = () => {
         name: "", description: '', discount: '', price: "", brand: "", stock: ""
     });
 
-    const inputHandle = (e) => {
-        setState({ ...state, [e.target.name]: e.target.value });
-    };
-
     const [cateShow, setCateShow] = useState(false);
     const [category, setCategory] = useState('');
     const [allCategory, setAllCategory] = useState(categorys);
     const [searchValue, setSearchValue] = useState('');
+    const [imageShow, setImageShow] = useState([]);
+
+    // Fetch product details when the component loads
+    useEffect(() => {
+        const fetchProduct = async () => {
+            try {
+                const response = await fetch(`http://localhost:3000/api/products/${id}`);
+                const data = await response.json();
+                setState({
+                    name: data.name,
+                    description: data.description,
+                    discount: data.discount,
+                    price: data.price,
+                    brand: data.brand,
+                    stock: data.stock
+                });
+                setCategory(data.category);
+                setImageShow(data.images || []); // Assuming `images` is an array of image URLs
+            } catch (error) {
+                console.error("Error fetching product:", error.message);
+            }
+        };
+
+        fetchProduct();
+    }, [id]);
+
+    const inputHandle = (e) => {
+        setState({ ...state, [e.target.name]: e.target.value });
+    };
 
     const categorySearch = (e) => {
         const value = e.target.value;
         setSearchValue(value);
         setAllCategory(value ? categorys.filter(c => c.name.toLowerCase().includes(value.toLowerCase())) : categorys);
     };
-
-    const [imageShow, setImageShow] = useState([]);
 
     const changeImage = (img, files, index) => {
         if (files.length > 0) {
@@ -49,22 +75,51 @@ const EditProduct = () => {
         setImageShow([...imageShow, '']);
     };
 
-    useEffect(() => {
-        setState({
-            name: "Mens tshirt",
-            description: 'Utilities for controlling how',
-            discount: 5,
-            price: 255,
-            brand: "Easy",
-            stock: 10
-        });
-        setCategory('Tshirt');
-        setImageShow([
-            'http://localhost:3001/images/headphone1.jpg',
-            'http://localhost:3001/images/headphone2.jpg',
-            'http://localhost:3001/images/headphone3.jpg'
-        ]);
-    }, []);
+    // Handle form submission to update the product
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const response = await fetch(`http://localhost:3000/api/products/${id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    ...state,
+                    category,
+                }),
+            });
+
+            if (response.ok) {
+                alert("Product updated successfully");
+                navigate("/seller/dashboard/products"); // Redirect to the products page
+            } else {
+                alert("Failed to update product");
+            }
+        } catch (error) {
+            console.error("Error updating product:", error.message);
+        }
+    };
+
+    // Handle product deletion
+    const handleDelete = async () => {
+        if (window.confirm("Are you sure you want to delete this product?")) {
+            try {
+                const response = await fetch(`http://localhost:3000/api/products/${id}`, {
+                    method: "DELETE",
+                });
+
+                if (response.ok) {
+                    alert("Product deleted successfully");
+                    navigate("/seller/dashboard/products"); // Redirect to the products page
+                } else {
+                    alert("Failed to delete product");
+                }
+            } catch (error) {
+                console.error("Error deleting product:", error.message);
+            }
+        }
+    };
 
     return (
         <div className="px-4 lg:px-8 pt-6">
@@ -76,7 +131,7 @@ const EditProduct = () => {
                     </Link>
                 </div>
 
-                <form className="text-white space-y-4">
+                <form onSubmit={handleSubmit} className="text-white space-y-4">
                     <div className="grid md:grid-cols-2 gap-4">
                         <div>
                             <label htmlFor="name">Product Name</label>
@@ -167,7 +222,10 @@ const EditProduct = () => {
                         </div>
                     </div>
 
-                    <div className="flex justify-end">
+                    <div className="flex justify-between">
+                        <button type="button" onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-md shadow-md">
+                            Delete Product
+                        </button>
                         <button type="submit" className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md shadow-md">
                             Save Changes
                         </button>

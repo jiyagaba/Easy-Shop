@@ -5,6 +5,7 @@ const morgan = require("morgan");
 const db = require("./db");
 const errorHandler = require("./middlewares/errorHandler");
 const RefreshTokenRoute = require("./routes/RefreshToken");
+const getProductsRoute = require("./routes/getProducts");
 const tokenAuthentication = require("./middlewares/tokenAuthentication");
 dotenv.config();
 
@@ -30,6 +31,7 @@ db.execute("SELECT 1")
     app.use(express.urlencoded({ extended: true }));
     app.use(express.static("public"));
     app.use("/uploads", express.static("uploads"));
+    app.use("/api/products", getProductsRoute);
 
     // ✅ Routes
     const signupRouter = require("./routes/signup");
@@ -40,7 +42,10 @@ db.execute("SELECT 1")
     const adminlogin = require("./routes/adminlogin");
     const profileuser = require("./routes/profile");
     const sellerprofile=require("./routes/seller");
-
+    const getFeaturedProductsRoute = require("./routes/getFeaturedProducts");
+    const updateProductRoute = require("./routes/updateProducts");
+    const deleteProductRoute=require("./routes/deleteProduct");
+    const viewProductRoute=require("./routes/viewProduct");
     // Public routes (no authentication)
     app.use("/api/signup", signupRouter);
     app.use("/api/login", loginRouter);
@@ -49,9 +54,15 @@ db.execute("SELECT 1")
     app.use("/api/seller/register", sellerregisterroute);
     app.use("/api/admin/login", adminlogin);
     app.use("/api/seller/refresh-token", RefreshTokenRoute);
+    
     // Protected routes (authentication required)
     app.use("/api/profile",  profileuser);
     app.use("/api/seller",sellerprofile);
+    app.use("/api/seller/add-product",require("./routes/addProduct"));
+    app.use("/api/products", getFeaturedProductsRoute);
+    app.use("/api/products/update", updateProductRoute);
+    app.use("/api/products/delete",deleteProductRoute);
+    app.use("/api/products/view",viewProductRoute);
 
     app._router.stack.forEach((r) => {
       if (r.route && r.route.path) {

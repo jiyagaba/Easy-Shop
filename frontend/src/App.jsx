@@ -72,7 +72,7 @@ function App() {
         <Route path="chat-customer" element={<SellerToCustomer/>}/>
         <Route path="chat-support" element={<SellerToAdmin/>}/>
         <Route path="profile" element={<Profile/>}/>
-        <Route path="all-product/edit-product" element={<EditProduct/>}/>
+        <Route path="all-product/edit-product/:id" element={<EditProduct/>}/>
         
 
         
