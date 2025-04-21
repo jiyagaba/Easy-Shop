@@ -7,6 +7,7 @@ const router = express.Router();
 router.get("/test", (req, res) => {
   res.send("✅ Profile test route works");
 });
+
 // ------------------ GET PROFILE ------------------
 router.get("/:id", tokenAuthentication, async (req, res) => {
   const tokenUserId = req.user.id;
@@ -23,7 +24,7 @@ router.get("/:id", tokenAuthentication, async (req, res) => {
 
   try {
     const [users] = await db.execute(
-      `SELECT id, name, email, first_name, middle_name, last_name, phone, house_no, street, landmark, city, state, country, pincode, created_at, isVerified
+      `SELECT id, name, email, first_name, last_name, phone, house_no, street, city, state, country, pincode, created_at, isVerified
        FROM users 
        WHERE id = ?`,
       [paramId]
@@ -41,7 +42,6 @@ router.get("/:id", tokenAuthentication, async (req, res) => {
     res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 });
-
 
 // ------------------ UPDATE PROFILE ------------------
 router.put("/:id", tokenAuthentication, async (req, res) => {
@@ -69,12 +69,10 @@ router.put("/:id", tokenAuthentication, async (req, res) => {
     name,
     email,
     first_name,
-    middle_name,
     last_name,
     phone,
     house_no,
     street,
-    landmark,
     city,
     state,
     country,
@@ -85,12 +83,10 @@ router.put("/:id", tokenAuthentication, async (req, res) => {
     name: name || "",
     email: email || "",
     first_name: first_name || "",
-    middle_name: middle_name || "",
     last_name: last_name || "",
     phone: phone || "",
     house_no: house_no || "",
     street: street || "",
-    landmark: landmark || "",
     city: city || "",
     state: state || "",
     country: country || "",
@@ -103,12 +99,10 @@ router.put("/:id", tokenAuthentication, async (req, res) => {
       name = ?, 
       email = ?, 
       first_name = ?, 
-      middle_name = ?, 
       last_name = ?, 
       phone = ?, 
       house_no = ?, 
       street = ?, 
-      landmark = ?, 
       city = ?, 
       state = ?, 
       country = ?, 
@@ -120,12 +114,10 @@ router.put("/:id", tokenAuthentication, async (req, res) => {
     updatedData.name,
     updatedData.email,
     updatedData.first_name,
-    updatedData.middle_name,
     updatedData.last_name,
     updatedData.phone,
     updatedData.house_no,
     updatedData.street,
-    updatedData.landmark,
     updatedData.city,
     updatedData.state,
     updatedData.country,
@@ -160,7 +152,6 @@ router.delete("/:id", tokenAuthentication, async (req, res) => {
   console.log("🔐 User from token:", user);
   console.log("🆔 ID from URL params:", id);
 
-  // Check if the user is trying to delete their own profile
   if (parseInt(user.id, 10) !== parseInt(id, 10)) {
     return res.status(403).json({ message: "You cannot delete another user's profile" });
   }
