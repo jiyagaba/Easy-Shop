@@ -30,6 +30,8 @@ import SellerToCustomer from "./pages/SellertoCustomer";
 import SellerToAdmin from "./pages/SellerToAdmin";
 import Profile from "./pages/Profile";
 import EditProduct from "./pages/EditProduct";
+import CategoryProducts from "./pages/CategoryProducts";
+
 // import CustomerDashboard from "./pages/CustomerDashboard";
 
 function App() {
@@ -46,6 +48,8 @@ function App() {
         <Route path="/card" element={<Card />} />
         <Route path="/product/details/:id" element={<Details />} />
         <Route path="/dashboard" element={<Profile/>}/>
+        <Route path="/category/:category" element={<CategoryProducts />} />
+
         
         
         {/* Admin Dashboard Layout */}
@@ -71,7 +75,7 @@ function App() {
         <Route path="payments" element={<Payments/>}/>
         <Route path="chat-customer" element={<SellerToCustomer/>}/>
         <Route path="chat-support" element={<SellerToAdmin/>}/>
-        <Route path="profile" element={<Profile/>}/>
+        <Route path="profile" element={<SellerDetails/>}/>
         <Route path="all-product/edit-product/:id" element={<EditProduct/>}/>
         
 

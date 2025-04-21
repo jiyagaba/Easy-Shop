@@ -1,17 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { IoMdImages, IoMdCloseCircle } from "react-icons/io";
 
 const AddProduct = () => {
-  const categories = [
-    { id: 1, name: 'Sports' },
-    { id: 2, name: 'Tshirt' },
-    { id: 3, name: 'Mobile' },
-    { id: 4, name: 'Computer' },
-    { id: 5, name: 'Watch' },
-    { id: 6, name: 'Pant' },
-  ];
-
+  const [categories, setCategories] = useState([]);
   const [state, setState] = useState({
     name: "",
     description: '',
@@ -23,11 +15,32 @@ const AddProduct = () => {
 
   const [cateShow, setCateShow] = useState(false);
   const [category, setCategory] = useState('');
-  const [allCategory, setAllCategory] = useState(categories);
+  const [allCategory, setAllCategory] = useState([]);
   const [searchValue, setSearchValue] = useState('');
   const [images, setImages] = useState([]);
   const [imageShow, setImageShow] = useState([]);
   const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    // Fetch categories from your API when the component mounts
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/api/categories");
+        const data = await response.json();
+        if (response.ok) {
+          setCategories(data);
+          setAllCategory(data); // Set all categories when data is fetched
+        } else {
+          setMessage("❌ Failed to load categories");
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        setMessage("❌ Error fetching categories. Please try again.");
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const inputHandle = (e) => {
     setState({
@@ -76,9 +89,21 @@ const AddProduct = () => {
     setImageShow(updatedUrls);
   };
 
+  // Function to generate slug from the product name or category
+  const generateSlug = (str) => {
+    return str
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')  // Replace non-alphanumeric characters with a dash
+      .replace(/(^-|-$)/g, '');      // Remove any leading or trailing dashes
+  };
+
   const submitProduct = async (e) => {
     e.preventDefault();
     setMessage("Submitting product...");
+
+    // Generate a slug based on the product name (or category)
+    const slug = generateSlug(category);
+
 
     // Prepare form data
     const formData = new FormData();
@@ -89,6 +114,8 @@ const AddProduct = () => {
     formData.append("brand", state.brand);
     formData.append("stock", state.stock);
     formData.append("category", category);
+    formData.append("slug", slug); // Append the generated slug
+
     images.forEach((image, index) => {
       formData.append(`images`, image); // Append each image
     });
@@ -220,7 +247,7 @@ const AddProduct = () => {
                     className='absolute top-1 right-1 text-red-500 text-lg cursor-pointer' />
                 </div>
               ))}
-              <label className='w-24 h-24 flex items-center justify-center bg-[#2a2a40] border border-slate-600 text-white rounded-md cursor-pointer hover:shadow-[0_0_10px_#9b5cfb]'>
+              <label className='w-24 h-24 flex items-center justify-center bg-[#2a2a40] border border-slate-600 text-white rounded-md cursor-pointer hover:shadow-[0_0_10px_#9b5cfb]' >
                 <IoMdImages className='text-xl' />
                 <input type="file" multiple className='hidden' onChange={imageHandle} />
               </label>

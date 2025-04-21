@@ -50,17 +50,21 @@ db.execute("SELECT 1")
     const updateProductRoute = require("./routes/updateProducts");
     const deleteProductRoute=require("./routes/deleteProduct");
     const viewProductRoute=require("./routes/viewProduct");
-    
+    const category=require("./routes/addcategory");
     const discountedProductsRoute = require("./routes/discountedproducts");
     // Public routes (no authentication)
     app.use("/api/signup", signupRouter);
     app.use("/api/login", loginRouter);
     app.use("/api/verify", verifyRouter);
     app.use("/api/seller/login", sellerloginroute);
-    app.use("/api/seller/register", sellerregisterroute);
+    app.use("/api/seller/signup", sellerregisterroute);
     app.use("/api/admin/login", adminlogin);
     app.use("/api/seller/refresh-token", RefreshTokenRoute);
     app.use("/api/products/discounted", discountedProductsRoute);
+    app.use("/api/categories",category);;
+    
+    app.use("/images/category", express.static(path.join(__dirname, "uploads/category")));
+
     
     // Protected routes (authentication required)
     app.use("/api/profile",  profileuser);

@@ -25,7 +25,7 @@ router.get("/:id", tokenAuthentication, async (req, res) => {
 
   try {
     const [sellers] = await db.execute(
-      `SELECT id, sellername AS name, email, store_name, phone, state, city, status, image, created_at 
+      `SELECT id, sellername, email, store_name, phone, state, city, status, image, created_at 
        FROM sellers 
        WHERE id = ?`,
       [paramId]
@@ -67,7 +67,7 @@ router.put("/:id", tokenAuthentication, async (req, res) => {
   }
 
   const {
-    name,
+    sellername, // Updated to match the frontend field
     email,
     store_name,
     phone,
@@ -78,7 +78,7 @@ router.put("/:id", tokenAuthentication, async (req, res) => {
   } = req.body;
 
   const updatedData = {
-    name: name || "",
+    sellername: sellername || "",
     email: email || "",
     store_name: store_name || "",
     phone: phone || "",
@@ -103,7 +103,7 @@ router.put("/:id", tokenAuthentication, async (req, res) => {
   `;
 
   const values = [
-    updatedData.name,
+    updatedData.sellername,
     updatedData.email,
     updatedData.store_name,
     updatedData.phone,
@@ -124,6 +124,8 @@ router.put("/:id", tokenAuthentication, async (req, res) => {
     }
 
     console.log("✅ Seller profile updated successfully");
+
+    // Return the updated seller details
     res.status(200).json({ id, ...updatedData });
   } catch (error) {
     console.error("❌ DB Error in /api/seller PUT:", error.message);

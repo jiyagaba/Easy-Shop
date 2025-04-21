@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import axios from "axios";
 
 const SellerDetails = () => {
   const [seller, setSeller] = useState(null);
   const [formData, setFormData] = useState({
-    name: "",
+    sellername: "",  // Changed field name to match database
     email: "",
+    password: "",  // You might want to handle password change separately
     store_name: "",
-    shop_name: "", // new field
+    phone: "",  // Changed field name to match database
+    state: "",  // Added state
+    city: "",  // Added city
   });
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -19,11 +23,14 @@ const SellerDetails = () => {
 
         if (!token) {
           alert("You are not logged in.");
-          window.location.href = "/login"; // redirect if no token
+          window.location.href = "/login";
           return;
         }
 
-        const res = await fetch("http://localhost:3000/api/seller/10", {
+        const decodedToken = JSON.parse(atob(token.split(".")[1]));
+        const sellerId = decodedToken.id;
+
+        const res = await fetch(`http://localhost:3000/api/seller/${sellerId}`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -42,10 +49,13 @@ const SellerDetails = () => {
 
         setSeller(data);
         setFormData({
-          name: data.name || "",
+          sellername: data.sellername || "",
           email: data.email || "",
+          password: data.password || "",  // Handle password carefully
           store_name: data.store_name || "",
-          shop_name: data.shop_name || "",
+          phone: data.phone || "",
+          state: data.state || "",
+          city: data.city || "",
         });
         setLoading(false);
       } catch (err) {
@@ -66,28 +76,26 @@ const SellerDetails = () => {
   };
 
   const handleSave = async () => {
+    console.log("FormData before saving:", formData); // Debugging
     const token = localStorage.getItem("token");
     if (!token) return alert("You are not logged in.");
 
-    const currentSeller = JSON.parse(localStorage.getItem("seller"));
-    if (seller.id !== currentSeller.id) return alert("Unauthorized");
-
     try {
-      const res = await fetch(`http://localhost:3000/api/seller/${seller.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
-      });
+      const res = await axios.put(
+        `http://localhost:3000/api/seller/${seller.id}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Update failed");
-
+      const data = res.data;
+      console.log("Updated seller data from backend:", data); // Debugging
       setSeller(data);
       setEditMode(false);
-      localStorage.setItem("seller", JSON.stringify(data));
       alert("✅ Seller details updated successfully");
     } catch (err) {
       console.error("❌ Update failed:", err);
@@ -97,6 +105,7 @@ const SellerDetails = () => {
 
   const handleDelete = async () => {
     if (!window.confirm("Are you sure you want to delete your account?")) return;
+
     try {
       const token = localStorage.getItem("token");
       if (!token) return alert("You are not logged in.");
@@ -111,7 +120,6 @@ const SellerDetails = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Delete failed");
 
-      localStorage.removeItem("seller");
       localStorage.removeItem("token");
       setSeller(null);
       alert("🗑️ Account deleted successfully");
@@ -135,25 +143,23 @@ const SellerDetails = () => {
 
       <div className="w-full p-4 bg-gradient-to-br from-[#1e1e2f] to-[#2e266f] rounded-xl shadow-[0_0_20px_#9b5cfb] text-white">
         <div className="flex flex-wrap">
-          {/* Image Section */}
           <div className="w-full md:w-3/12 flex justify-center items-center p-3">
             <motion.img
               initial={{ scale: 0.9 }}
               animate={{ scale: 1 }}
               transition={{ duration: 0.4 }}
               className="w-[200px] h-[230px] object-cover rounded-xl border-4 border-[#7a35fe]"
-              src={seller.image || "http://localhost:3001/images/demo.jpeg"}
+              src={seller.image || "/images/demo.jpeg"}
               alt="Seller"
             />
           </div>
 
-          {/* Basic Info */}
           <div className="w-full md:w-4/12 p-3">
             <h2 className="text-lg font-semibold text-white mb-3 border-b border-purple-600 pb-1">
               Basic Info
             </h2>
             <div className="flex flex-col gap-3 p-4 bg-[#322a5f] rounded-xl">
-              {["name", "email", "store_name", "shop_name"].map((field) => (
+              {["sellername", "email", "store_name", "phone", "state", "city"].map((field) => (
                 <div key={field} className="text-sm">
                   <span className="font-bold">{field.replace(/_/g, " ").toUpperCase()}:</span>
                   {editMode ? (
@@ -173,7 +179,6 @@ const SellerDetails = () => {
           </div>
         </div>
 
-        {/* Action Buttons */}
         <div className="mt-6 flex justify-center gap-4">
           {editMode ? (
             <>
