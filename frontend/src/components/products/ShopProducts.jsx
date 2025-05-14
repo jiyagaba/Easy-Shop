@@ -4,6 +4,7 @@ import { RiShoppingCartLine } from 'react-icons/ri';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { refresh_access_token } from '../../store/reducers/authReducer';
+import { useCart } from '../../contexts/CartContext';
 
 const ShopProducts = ({ styles }) => {
   const [products, setProducts] = useState([]);
@@ -12,6 +13,7 @@ const ShopProducts = ({ styles }) => {
   const [likedProducts, setLikedProducts] = useState([]);
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { addToCart } = useCart();
 
   useEffect(() => {
     // Fetch products from the API
@@ -68,7 +70,7 @@ const ShopProducts = ({ styles }) => {
         const refreshResult = await dispatch(refresh_access_token());
         if (refresh_access_token.fulfilled.match(refreshResult)) {
           token = refreshResult.payload;
-          localStorage.setItem('customerToken', token);
+          localStorage.setItem('token', token); // Store under 'token' key consistently
           response = await likeProduct(token);
         } else {
           console.log('Token refresh failed, please login again');
@@ -100,20 +102,20 @@ const ShopProducts = ({ styles }) => {
     return <p className="text-center text-gray-500">No products available.</p>;
 
   return (
-    <div className="w-full">
+    <div className="w-full max-w-full">
       <div
         className={`grid ${styles === 'grid'
-          ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3'
+          ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'
           : 'grid-cols-1'} gap-6`}
       >
         {products.map((product) => (
           <div
             key={product.id}
-            className={`bg-white rounded-2xl shadow-md hover:shadow-xl transition-transform duration-500 overflow-hidden ${styles === 'grid' ? 'flex flex-col' : 'flex md:flex-row flex-col'}`}
+            className={`bg-white rounded-2xl shadow-md hover:shadow-xl transition-transform duration-500 overflow-hidden ${styles === 'grid' ? 'flex flex-col' : 'flex flex-col md:flex-row'}`}
           >
             {/* Image Section */}
             <div
-              className={`relative group overflow-hidden ${styles === 'grid' ? 'w-full h-60' : 'md:w-1/3 w-full h-60'}`}
+              className={`${styles === 'grid' ? 'relative group overflow-hidden w-full h-[300px]' : 'relative group overflow-hidden md:w-1/3 w-full h-60'}`}
             >
               <img
                 className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110"
@@ -138,19 +140,25 @@ const ShopProducts = ({ styles }) => {
                 >
                   <FaEye />
                 </Link>
-                <li className="w-9 h-9 cursor-pointer bg-white flex justify-center items-center rounded-full hover:bg-[#8A4FFF] hover:text-white hover:rotate-[360deg] transition-all duration-500">
+                <li
+                  onClick={() => addToCart(product, 1)}
+                  className="w-9 h-9 cursor-pointer bg-white flex justify-center items-center rounded-full hover:bg-[#8A4FFF] hover:text-white hover:rotate-[360deg] transition-all duration-500"
+                >
                   <RiShoppingCartLine />
                 </li>
               </ul>
             </div>
 
             {/* Product Details */}
-            <div className={`p-4 flex flex-col justify-between ${styles === 'grid' ? '' : 'md:w-2/3 w-full'}`}>
-              <h2 className="text-lg font-semibold text-gray-800">{product.title}</h2>
-              <div className="flex justify-between items-center mt-2">
-                <span className="text-xl font-bold text-[#8A4FFF]">${product.price}</span>
+            <div className={`${styles === 'grid' ? 'p-4 flex flex-col justify-between' : 'p-4 flex flex-col justify-between md:w-2/3 w-full'}`}>
+              <h2 className="text-base font-semibold text-gray-800 uppercase">{product.title}</h2>
+              <div className="mt-2">
+                <span className="text-lg font-bold text-purple-600">${product.price}</span>
               </div>
-              <button className="mt-4 flex items-center justify-center gap-2 bg-[#8A4FFF] text-white py-2 rounded-lg hover:bg-[#6e3ff0] transition-colors duration-300">
+              <button
+                onClick={() => addToCart(product, 1)}
+                className="mt-4 w-full flex items-center justify-center gap-2 bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition-colors duration-300"
+              >
                 <RiShoppingCartLine /> Add to Cart
               </button>
             </div>

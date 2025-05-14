@@ -95,7 +95,7 @@ const Prodsall = () => {
         {/* Table */}
         <div className='overflow-x-auto'>
           <div className='min-w-full text-sm text-left text-white'>
-            <div className='uppercase border-b border-slate-700 font-semibold flex py-3 bg-[#2d2d48] rounded-md text-sm text-gray-300'>
+              <div className='uppercase border-b border-slate-700 font-semibold flex py-3 bg-[#2d2d48] rounded-md text-sm text-gray-300'>
               <div className='w-[5%] px-2'>No</div>
               <div className='w-[10%] px-2'>Image</div>
               <div className='w-[20%] px-2'>Name</div>
@@ -104,6 +104,7 @@ const Prodsall = () => {
               <div className='w-[10%] px-2'>Price</div>
               <div className='w-[10%] px-2'>Discount</div>
               <div className='w-[10%] px-2'>Stock</div>
+              <div className='w-[10%] px-2'>Featured</div>
               <div className='w-[15%] px-2'>Action</div>
             </div>
 
@@ -126,6 +127,44 @@ const Prodsall = () => {
                 <div className='w-[10%] px-2'>${product.price}</div>
                 <div className='w-[10%] px-2'>{product.discount}%</div>
                 <div className='w-[10%] px-2'>{product.stock}</div>
+                <div className='w-[10%] px-2 flex justify-center'>
+                  <input
+                    type="checkbox"
+                    checked={product.featured === 1 || product.featured === true}
+                    onChange={async (e) => {
+                      const newFeatured = e.target.checked ? 1 : 0;
+                      try {
+                        const response = await fetch(`http://localhost:3000/api/products/${product.id}`, {
+                          method: "PUT",
+                          headers: {
+                            "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({
+                            name: product.title,
+                            description: product.description || '',
+                            price: product.price,
+                            brand: product.brand,
+                            stock: product.stock,
+                            category: product.category,
+                            discount: product.discount,
+                            featured: newFeatured
+                          }),
+                        });
+                        if (response.ok) {
+                          const updatedProducts = [...products];
+                          updatedProducts[startIndex + index].featured = newFeatured;
+                          setProducts(updatedProducts);
+                        } else {
+                          alert("Failed to update featured status");
+                        }
+                      } catch (error) {
+                        console.error("Error updating featured status:", error);
+                        alert("Error updating featured status");
+                      }
+                    }}
+                    className="w-5 h-5 cursor-pointer"
+                  />
+                </div>
                 <div className='w-[15%] px-2'>
                   <div className='flex items-center gap-2'>
                     <Link

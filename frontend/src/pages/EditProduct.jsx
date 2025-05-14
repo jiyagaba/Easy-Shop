@@ -16,7 +16,7 @@ const EditProduct = () => {
     ];
 
     const [state, setState] = useState({
-        name: "", description: "", discount: "", price: "", brand: "", stock: ""
+        name: "", description: "", discount: "", price: "", brand: "", stock: "", featured: false
     });
 
     const [cateShow, setCateShow] = useState(false);
@@ -36,7 +36,8 @@ const EditProduct = () => {
                     discount: data.discount || "",
                     price: data.price || "",
                     brand: data.brand || "",
-                    stock: data.stock || ""
+                    stock: data.stock || "",
+                    featured: data.featured === 1
                 });
                 setCategory(data.category || '');
                 setImageShow([data.image ? `http://localhost:3000/uploads/${data.image}` : '']);
@@ -86,6 +87,7 @@ const EditProduct = () => {
         formData.append("brand", state.brand);
         formData.append("stock", state.stock);
         formData.append("category", category);
+        formData.append("featured", state.featured ? 1 : 0);
 
         // Append each image to FormData if it's a File
         imageShow.forEach((img) => {
@@ -93,6 +95,7 @@ const EditProduct = () => {
                 formData.append('image', img);
             }
         });
+
 
         try {
             const response = await fetch(`http://localhost:3000/api/products/update/${id}`, {
@@ -152,6 +155,18 @@ const EditProduct = () => {
                     <input name="brand" value={state.brand} onChange={inputHandle} placeholder="Brand"
                         className="input w-full text-gray-900" />
                         </div>
+                    </div>
+
+                    <div className="mt-4 flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id="featured"
+                            name="featured"
+                            checked={state.featured}
+                            onChange={(e) => setState({ ...state, featured: e.target.checked })}
+                            className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500"
+                        />
+                        <label htmlFor="featured" className="text-white text-sm cursor-pointer">Featured Product</label>
                     </div>
 
                     <div className="grid md:grid-cols-2 gap-6">

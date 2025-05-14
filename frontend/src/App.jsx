@@ -2,7 +2,7 @@ import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Shops from "./pages/Shops";
-import Card from "./pages/Cards";
+import Cart from "./pages/Cart";
 import Details from "./pages/Details";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -32,7 +32,9 @@ import Profile from "./pages/Profile";
 import EditProduct from "./pages/EditProduct";
 import CategoryProducts from "./pages/CategoryProducts";
 import LikedProducts from "./pages/LikedProducts";
+// import Cart from "./pages/Cart";
 import { WishlistProvider } from "./contexts/WishlistProvider";
+import { CartProvider } from "./contexts/CartContext";
 import BlogPage from "./pages/BlogPage";
 
 // import CustomerDashboard from "./pages/CustomerDashboard";
@@ -41,20 +43,22 @@ function App() {
   return (
     <BrowserRouter>
     <WishlistProvider>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/seller-login" element={<SellerLogin />} />
-        <Route path="/seller-register" element={<SellerRegister />} />
-        <Route path="/admin-login" element={<AdminLogin />} />
-        <Route path="/shops" element={<Shops />} />
-        <Route path="/card" element={<Card />} />
-        <Route path="/product/details/:id" element={<Details />} />
-        <Route path="/dashboard" element={<Profile/>}/>
-        <Route path="/category/:category" element={<CategoryProducts />} />
-        <Route path="/liked-products" element={<LikedProducts/>}/>
-        <Route path="/blog" element={<BlogPage/>}/>
+      <CartProvider>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/seller-login" element={<SellerLogin />} />
+          <Route path="/seller-register" element={<SellerRegister />} />
+          <Route path="/admin-login" element={<AdminLogin />} />
+          <Route path="/shops" element={<Shops />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/product/details/:id" element={<Details />} />
+          <Route path="/dashboard" element={<Profile/>}/>
+          <Route path="/category/:category" element={<CategoryProducts />} />
+          <Route path="/liked-products" element={<LikedProducts/>}/>
+          <Route path="/blog" element={<BlogPage/>}/>
+          {/* <Route path="/cart" element={<Card />} /> */}
 
         
         
@@ -91,8 +95,9 @@ function App() {
       
         
 
-      </Routes>
-      </WishlistProvider>
+        </Routes>
+      </CartProvider>
+    </WishlistProvider>
     </BrowserRouter>
   );
 }

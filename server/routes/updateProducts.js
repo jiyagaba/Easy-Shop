@@ -6,7 +6,7 @@ const upload = require("../middlewares/upload"); // Import the upload middleware
 // PUT route for updating a product with image upload
 router.put("/:id", upload.any(), async (req, res) => {
   const { id } = req.params; // Get the product ID from the URL parameter
-  const {
+const {
     name,
     description,
     price,
@@ -14,6 +14,7 @@ router.put("/:id", upload.any(), async (req, res) => {
     stock,
     category,
     discount,
+    featured
   } = req.body; // Get the other product details from the body
 
   // Get the uploaded image path, if available
@@ -25,8 +26,8 @@ router.put("/:id", upload.any(), async (req, res) => {
 
   try {
     // Base query to update the product
-    let query = `UPDATE products SET name = ?, description = ?, price = ?, brand = ?, stock = ?, category = ?, discount = ?`;
-    const values = [name, description, price, brand, stock, category, discount];
+    let query = `UPDATE products SET name = ?, description = ?, price = ?, brand = ?, stock = ?, category = ?, discount = ?, featured = ?`;
+    const values = [name, description, price, brand, stock, category, discount, featured];
 
     // If an image was uploaded, update the image field in the query
     if (imagePath) {

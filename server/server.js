@@ -53,6 +53,7 @@ db.execute("SELECT 1")
     const category=require("./routes/addcategory");
     const discountedProductsRoute = require("./routes/discountedproducts");
     const likeProductRoute = require("./routes/likeProduct");
+    const add_to_cart=require("./routes/addToCart");
 
 
     // Public routes (no authentication)
@@ -68,6 +69,7 @@ db.execute("SELECT 1")
     
     app.use("/images/category", express.static(path.join(__dirname, "uploads/category")));
     app.use("/api/likeProduct", likeProductRoute);
+    app.use("/api/cart",add_to_cart);
 
     
     // Protected routes (authentication required)

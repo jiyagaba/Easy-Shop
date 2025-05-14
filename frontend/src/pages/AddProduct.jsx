@@ -10,7 +10,8 @@ const AddProduct = () => {
     discount: '',
     price: "",
     brand: "",
-    stock: ""
+    stock: "",
+    featured: false
   });
 
   const [cateShow, setCateShow] = useState(false);
@@ -116,9 +117,12 @@ const AddProduct = () => {
     formData.append("category", category);
     formData.append("slug", slug); // Append the generated slug
 
+    formData.append("featured", state.featured ? 1 : 0);
+
     images.forEach((image, index) => {
       formData.append(`images`, image); // Append each image
     });
+
 
     try {
       const token = localStorage.getItem("token"); // Get token from localStorage
@@ -233,6 +237,18 @@ const AddProduct = () => {
             <textarea name="description" value={state.description} onChange={inputHandle}
               placeholder="Write product description"
               className='w-full px-4 py-2 bg-[#2a2a40] border border-slate-600 rounded-md text-white outline-none focus:shadow-[0_0_10px_#9b5cfb]' />
+          </div>
+
+          <div className='mt-4 flex items-center gap-2'>
+            <input
+              type="checkbox"
+              id="featured"
+              name="featured"
+              checked={state.featured}
+              onChange={(e) => setState({ ...state, featured: e.target.checked })}
+              className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500"
+            />
+            <label htmlFor="featured" className="text-white text-sm cursor-pointer">Featured Product</label>
           </div>
 
           <div className='mt-4'>

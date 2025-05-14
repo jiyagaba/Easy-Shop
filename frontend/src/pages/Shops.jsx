@@ -36,11 +36,11 @@ const Shops = () => {
       try {
         const response = await fetch('http://localhost:3000/api/products');
         const data = await response.json();
-        if (response.ok) {
-          setFeaturedProducts(data.filter((product) => product.featured === 0));
-        } else {
-          console.error('Failed to fetch products');
-        }
+          if (response.ok) {
+            setFeaturedProducts(data);
+          } else {
+            console.error('Failed to fetch products');
+          }
       } catch (error) {
         console.error('Error fetching products:', error);
       }
@@ -82,7 +82,7 @@ const Shops = () => {
           </div>
 
           <div className='w-full flex flex-wrap'>
-            <div className={`w-3/12 md-lg:w-4/12 md:w-full pr-8 ${filter ? 'md:h-0 md:overflow-hidden md:mb-6' : 'md:h-auto md:overflow-auto md:mb-0'}`}>
+            <div className={`w-3/12 md-lg:w-4/12 md:w-full pr-8 bg-white ${filter ? 'md:h-0 md:overflow-hidden md:mb-6' : 'md:h-auto md:overflow-auto md:mb-0'}`}>
               <h2 className='text-3xl font-bold mb-3 text-slate-600'>Category</h2>
               <div className='py-2'>
                 {categorys.map((c, i) => (
@@ -112,8 +112,8 @@ const Shops = () => {
               <h2 className='text-3xl font-bold mb-3 text-slate-600'>Rating</h2>
               {[5, 4, 3, 2, 1].map((star) => (
                 <div key={star} className='flex items-center gap-2 py-1 cursor-pointer' onClick={() => setRating(star)}>
-                  {[...Array(star)].map((_, i) => <AiFillStar key={i} className='text-yellow-500' />)}
-                  {[...Array(5 - star)].map((_, i) => <CiStar key={i} className='text-gray-400' />)}
+                  {[...Array(star)].map((_, i) => <AiFillStar key={i} className='text-purple-600' />)}
+                  {[...Array(5 - star)].map((_, i) => <CiStar key={i} className='text-purple-300' />)}
                   <span className='text-slate-600'>{star} Star & above</span>
                 </div>
               ))}
@@ -124,16 +124,16 @@ const Shops = () => {
                 <div className='py-4 bg-white mb-10 px-3 rounded-md flex justify-between items-start border'>
                   <h2 className='text-lg font-medium text-slate-600'>{featuredProducts.length} Products</h2>
                   <div className='flex justify-center items-center gap-3'>
-                    <select className='p-1 border outline-0 text-slate-600 font-semibold'>
+                    <select className='p-1 border outline-0 text-purple-600 font-semibold'>
                       <option value=''>Sort By</option>
                       <option value='low-to-high'>Low to High Price</option>
                       <option value='high-to-low'>High to Low Price</option>
                     </select>
                     <div className='flex justify-center items-start gap-4 md-lg:hidden'>
-                      <div onClick={() => setStyles('grid')} className={`p-2 ${styles === 'grid' ? 'bg-slate-300' : ''} text-slate-600 hover:bg-slate-300 cursor-pointer rounded-sm`}>
+                      <div onClick={() => setStyles('grid')} className={`p-2 ${styles === 'grid' ? 'bg-purple-300' : ''} text-purple-600 hover:bg-purple-300 cursor-pointer rounded-sm`}>
                         <BsFillGridFill />
                       </div>
-                      <div onClick={() => setStyles('list')} className={`p-2 ${styles === 'list' ? 'bg-slate-300' : ''} text-slate-600 hover:bg-slate-300 cursor-pointer rounded-sm`}>
+                      <div onClick={() => setStyles('list')} className={`p-2 ${styles === 'list' ? 'bg-purple-300' : ''} text-purple-600 hover:bg-purple-300 cursor-pointer rounded-sm`}>
                         <FaThList />
                       </div>
                     </div>

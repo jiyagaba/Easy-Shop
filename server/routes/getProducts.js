@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const db = require("../db");
 
-// Get All Products
+// Get All Products (both featured and non-featured)
 router.get("/", async (req, res) => {
   try {
     const [products] = await db.execute(`
@@ -19,3 +19,4 @@ router.get("/", async (req, res) => {
 });
 
 module.exports = router;
+

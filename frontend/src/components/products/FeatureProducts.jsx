@@ -3,9 +3,13 @@ import { FaEye, FaRegHeart } from "react-icons/fa";
 import { RiShoppingCartLine } from "react-icons/ri";
 import Rating from '../Rating.';
 import { Link } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { refresh_access_token } from '../../store/reducers/authReducer';
 
 const FeatureProducts = () => {
   const [products, setProducts] = useState([]); // State to store featured products
+  const [likedProducts, setLikedProducts] = useState([]);
+  const dispatch = useDispatch();
 
   // Fetch featured products from the backend
   useEffect(() => {
@@ -21,6 +25,62 @@ const FeatureProducts = () => {
 
     fetchFeaturedProducts();
   }, []);
+
+  // Handle the 'like' action with token refresh logic
+  const handleLikeClick = async (product) => {
+    let token = localStorage.getItem('token');
+    if (!token) {
+      console.log('No token found, please login');
+      return;
+    }
+
+    const likeProduct = async (accessToken) => {
+      const response = await fetch('http://localhost:3000/api/likeProduct/like', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify({
+          productId: product.id,
+          name: product.title,
+          price: product.price,
+          image: product.img,
+          description: product.description || ''
+        })
+      });
+      return response;
+    };
+
+    try {
+      let response = await likeProduct(token);
+      if (response.status === 401) {
+        // Token expired, try to refresh
+        const refreshResult = await dispatch(refresh_access_token());
+        if (refresh_access_token.fulfilled.match(refreshResult)) {
+          token = refreshResult.payload;
+          localStorage.setItem('customerToken', token);
+          response = await likeProduct(token);
+        } else {
+          console.log('Token refresh failed, please login again');
+          return;
+        }
+      }
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setLikedProducts((prev) => [...prev, product.id]);
+        console.log('Product liked successfully!');
+      } else {
+        console.log('Failed to like product:', data.message);
+      }
+    } catch (err) {
+      console.error('Error liking product:', err);
+    }
+  };
+
+  const isLiked = (productId) => likedProducts.includes(productId);
 
   return (
     <div className='w-[90%] mx-auto py-20 bg-gradient-to-b from-white to-gray-100 rounded-t-3xl shadow-xl'>
@@ -59,7 +119,12 @@ const FeatureProducts = () => {
 
             {/* Floating Icons (Wishlist, View, Cart) */}
             <div className='absolute top-4 right-4 flex flex-col gap-2'>
-              <button className='p-3 bg-white rounded-full shadow-md hover:bg-gray-100 transition'>
+              <button
+                onClick={() => handleLikeClick(product)}
+                className={`p-3 rounded-full shadow-md transition ${
+                  isLiked(product.id) ? 'bg-purple-600 text-white' : 'bg-white text-black hover:bg-gray-100'
+                }`}
+              >
                 <FaRegHeart size={18} />
               </button>
 

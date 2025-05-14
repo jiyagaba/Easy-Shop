@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import Reviews from "../components/Reviews";
+import { useCart } from "../contexts/CartContext";
 
 const Details = () => {
   const { id } = useParams();
@@ -11,6 +12,7 @@ const Details = () => {
   const [state, setState] = useState("reviews");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { addToCart } = useCart();
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -41,6 +43,11 @@ const Details = () => {
 
   const price = Number(product.price) || 0;
   const discountedPrice = product.discount ? price - (price * product.discount) / 100 : price;
+
+  const handleAddToCart = () => {
+    addToCart(product, 1);
+    alert("Product added to cart!");
+  };
 
   return (
     <div className="bg-white min-h-screen flex flex-col items-center">
@@ -107,7 +114,10 @@ const Details = () => {
           </div>
 
           <div className="flex gap-4">
-            <button className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded shadow transition duration-300">
+            <button
+              onClick={handleAddToCart}
+              className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded shadow transition duration-300"
+            >
               Add to Cart
             </button>
             <button className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded shadow transition duration-300">
