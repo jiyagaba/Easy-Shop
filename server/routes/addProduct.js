@@ -96,7 +96,9 @@ router.post("/", tokenAuthentication, upload.array("images", 5), async (req, res
 
     // Save image paths
     if (req.files && req.files.length > 0) {
-      const imagePaths = req.files.map((file) => `/uploads/${file.filename}`);
+      // const imagePaths = req.files.map((file) => `/uploads/${file.filename}`);
+      const imagePaths = req.files.map((file) => file.filename);
+
       for (const imagePath of imagePaths) {
         await db.execute(
           `INSERT INTO product_images (product_id, image_path) VALUES (?, ?)`,

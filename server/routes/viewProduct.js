@@ -27,14 +27,21 @@ router.get("/:id", async (req, res) => {
     );
 
     // Extract image paths and create an array of image URLs
+    // const images = productImages.map((image) => {
+    //   return `http://localhost:3000/uploads/${image.image_path}`;
+    // });
     const images = productImages.map((image) => {
-      return `http://localhost:3000/uploads/${image.image_path}`;
-    });
+  let path = image.image_path;
+  if (path.startsWith('/uploads/')) {
+    path = path.slice('/uploads/'.length);
+  }
+  return `http://localhost:3000/uploads/${path}`;
+});
 
     // Prepare the product object with all required fields
     const product = {
       id: productData[0].id,
-      name: productData[0].name,
+      title: productData[0].name,
       description: productData[0].description,
       price: productData[0].price,
       brand: productData[0].brand,
@@ -44,6 +51,7 @@ router.get("/:id", async (req, res) => {
       seller_id: productData[0].seller_id,
       created_at: productData[0].created_at,
       featured: productData[0].featured,
+      img: productData[0].image,
       images: images, // Array of image URLs
     };
 

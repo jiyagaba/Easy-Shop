@@ -1,60 +1,172 @@
-import React from 'react';
-import { FaEye, FaRegHeart } from "react-icons/fa";
-import { RiShoppingCartLine } from "react-icons/ri";
-import Rating from '../Rating.';
-import { Link } from 'react-router-dom';  // ✅ Import Link
-
-// Dummy product data
-const products = [
-    { id: 1, title: 'Product 1', price: 490, rating: 4.8, img: '1.webp' },
-    { id: 2, title: 'Product 2', price: 420, rating: 4.2, img: '2.webp' },
-    { id: 3, title: 'Product 3', price: 350, rating: 3.5, img: '3.webp' },
-    { id: 4, title: 'Product 4', price: 500, rating: 5.0, img: '4.webp' },
-    { id: 5, title: 'Product 5', price: 280, rating: 2.8, img: '5.webp' },
-    { id: 6, title: 'Product 6', price: 460, rating: 4.6, img: '6.webp' },
-];
+import React, { useState, useEffect } from 'react';
+import { FaEye, FaRegHeart } from 'react-icons/fa';
+import { RiShoppingCartLine } from 'react-icons/ri';
+import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { refresh_access_token } from '../../store/reducers/authReducer';
 
 const ShopProducts = ({ styles }) => {
-    return (
-        <div className={`w-full grid ${styles === 'grid' ? 'grid-cols-3 md-lg:grid-cols-2 md:grid-cols-2' : 'grid-cols-1 md-lg:grid-cols-2 md:grid-cols-2'} gap-3`}>
-            {products.map((product) => (  // ✅ Now using `product`
-                <div key={product.id} className={`flex transition-all duration-1000 hover:shadow-md hover:-translate-y-3 ${styles === 'grid' ? 'flex-col justify-start items-start' : 'justify-start items-center md-lg:flex-col md-lg:justify-start md-lg:items-start'} w-full gap-4 bg-white p-1 rounded-md`}>
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [likedProducts, setLikedProducts] = useState([]);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-                    {/* Product Image */}
-                    <div className={styles === 'grid' ? 'w-full relative group h-[210px] md:h-[270px] xs:h-[170px] overflow-hidden' : 'md-lg:w-full relative group h-[210px] md:h-[270px] overflow-hidden'}>
-                        <img className='h-[240px] rounded-md md:h-[270px] xs:h-[170px] w-full object-cover' src={`/images/products/${product.img}`} alt={product.title} />
+  useEffect(() => {
+    // Fetch products from the API
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/products');
+        const data = await response.json();
+        if (response.ok) {
+          setProducts(data);
+        } else {
+          setError('Failed to fetch products');
+        }
+      } catch (err) {
+        console.error('Error fetching products:', err);
+        setError('Error fetching products. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-                        {/* Floating Buttons */}
-                        <ul className='flex transition-all duration-700 -bottom-10 justify-center items-center gap-2 absolute w-full group-hover:bottom-3'>
-                            <li className='w-[38px] h-[38px] cursor-pointer bg-white flex justify-center items-center rounded-full hover:bg-[#8A4FFF] hover:text-white hover:rotate-[720deg] transition-all'>
-                                <FaRegHeart />
-                            </li>
+    fetchProducts();
+  }, []);
 
-                            {/* ✅ Corrected Link */}
-                            <Link to={`/product/details/${product.id}`} className='w-[38px] h-[38px] cursor-pointer bg-white flex justify-center items-center rounded-full hover:bg-[#8A4FFF] hover:text-white hover:rotate-[720deg] transition-all'>
-                                <FaEye />
-                            </Link>
+  // Handle the 'like' action with token refresh logic
+  const handleLikeClick = async (product) => {
+    let token = localStorage.getItem('token');
+    if (!token) {
+      console.log('No token found, please login');
+      return;
+    }
 
-                            <li className='w-[38px] h-[38px] cursor-pointer bg-white flex justify-center items-center rounded-full hover:bg-[#8A4FFF] hover:text-white hover:rotate-[720deg] transition-all'>
-                                <RiShoppingCartLine />
-                            </li>
-                        </ul>    
-                    </div>
+    const likeProduct = async (accessToken) => {
+      const response = await fetch('http://localhost:3000/api/likeProduct/like', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify({
+          productId: product.id,
+          name: product.title,
+          price: product.price,
+          image: product.img,
+          description: product.description || ''
+        })
+      });
+      return response;
+    };
 
-                    {/* Product Details */}
-                    <div className='flex justify-start items-start flex-col gap-1'>
-                        <h2 className='font-bold'>{product.title}</h2>
-                        <div className='flex justify-start items-center gap-3'>
-                            <span className='text-md font-semibold'>${product.price}</span>
-                            <div className='flex'>
-                                <Rating ratings={product.rating} />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            ))}
-        </div>
-    );
+    try {
+      let response = await likeProduct(token);
+      if (response.status === 401) {
+        // Token expired, try to refresh
+        const refreshResult = await dispatch(refresh_access_token());
+        if (refresh_access_token.fulfilled.match(refreshResult)) {
+          token = refreshResult.payload;
+          localStorage.setItem('customerToken', token);
+          response = await likeProduct(token);
+        } else {
+          console.log('Token refresh failed, please login again');
+          return;
+        }
+      }
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setLikedProducts((prev) => [...prev, product]);
+        console.log('Product liked successfully!');
+      } else {
+        console.log('Failed to like product:', data.message);
+      }
+    } catch (err) {
+      console.error('Error liking product:', err);
+    }
+  };
+
+  // Navigate to the liked products page
+  const handleGoToLikedPage = () => {
+    navigate('/liked-products');
+  };
+
+  if (loading) return <p className="text-center text-gray-500">Loading products...</p>;
+  if (error) return <p className="text-center text-red-500">{error}</p>;
+  if (!Array.isArray(products) || products.length === 0)
+    return <p className="text-center text-gray-500">No products available.</p>;
+
+  return (
+    <div className="w-full">
+      <div
+        className={`grid ${styles === 'grid'
+          ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3'
+          : 'grid-cols-1'} gap-6`}
+      >
+        {products.map((product) => (
+          <div
+            key={product.id}
+            className={`bg-white rounded-2xl shadow-md hover:shadow-xl transition-transform duration-500 overflow-hidden ${styles === 'grid' ? 'flex flex-col' : 'flex md:flex-row flex-col'}`}
+          >
+            {/* Image Section */}
+            <div
+              className={`relative group overflow-hidden ${styles === 'grid' ? 'w-full h-60' : 'md:w-1/3 w-full h-60'}`}
+            >
+              <img
+                className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110"
+                src={product.img ? `http://localhost:3000${product.img}` : '/images/default-product.png'}
+                alt={product.title || 'Product Image'}
+                onError={(e) => {
+                  e.target.src = '/images/default-product.png';
+                }}
+              />
+
+              {/* Floating Buttons */}
+              <ul className="absolute bottom-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                <li
+                  onClick={() => handleLikeClick(product)} // Call handleLikeClick here
+                  className="w-9 h-9 cursor-pointer bg-white flex justify-center items-center rounded-full hover:bg-[#8A4FFF] hover:text-white hover:rotate-[360deg] transition-all duration-500"
+                >
+                  <FaRegHeart />
+                </li>
+                <Link
+                  to={`/product/details/${product.id}`}
+                  className="w-9 h-9 cursor-pointer bg-white flex justify-center items-center rounded-full hover:bg-[#8A4FFF] hover:text-white hover:rotate-[360deg] transition-all duration-500"
+                >
+                  <FaEye />
+                </Link>
+                <li className="w-9 h-9 cursor-pointer bg-white flex justify-center items-center rounded-full hover:bg-[#8A4FFF] hover:text-white hover:rotate-[360deg] transition-all duration-500">
+                  <RiShoppingCartLine />
+                </li>
+              </ul>
+            </div>
+
+            {/* Product Details */}
+            <div className={`p-4 flex flex-col justify-between ${styles === 'grid' ? '' : 'md:w-2/3 w-full'}`}>
+              <h2 className="text-lg font-semibold text-gray-800">{product.title}</h2>
+              <div className="flex justify-between items-center mt-2">
+                <span className="text-xl font-bold text-[#8A4FFF]">${product.price}</span>
+              </div>
+              <button className="mt-4 flex items-center justify-center gap-2 bg-[#8A4FFF] text-white py-2 rounded-lg hover:bg-[#6e3ff0] transition-colors duration-300">
+                <RiShoppingCartLine /> Add to Cart
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Liked Page Button */}
+      <button
+        onClick={handleGoToLikedPage}
+        className="mt-8 w-full py-2 bg-[#8A4FFF] text-white rounded-lg hover:bg-[#6e3ff0] transition-colors duration-300"
+      >
+        Go to Liked Products
+      </button>
+    </div>
+  );
 };
 
 export default ShopProducts;

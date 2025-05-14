@@ -22,7 +22,7 @@ db.execute("SELECT 1")
 
     // ✅ CORS Configuration (Fixed conflict)
     app.use(cors({
-      origin: "http://localhost:3001", // Set to your frontend's URL
+      origin: ["http://localhost:3001", "http://localhost:3002"], // Allow both frontend ports
       credentials: true, // Important for cookies & authentication
       methods: ["GET", "POST", "PUT", "DELETE"], // Allowed methods
       allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"], // Required headers
@@ -52,6 +52,9 @@ db.execute("SELECT 1")
     const viewProductRoute=require("./routes/viewProduct");
     const category=require("./routes/addcategory");
     const discountedProductsRoute = require("./routes/discountedproducts");
+    const likeProductRoute = require("./routes/likeProduct");
+
+
     // Public routes (no authentication)
     app.use("/api/signup", signupRouter);
     app.use("/api/login", loginRouter);
@@ -64,6 +67,7 @@ db.execute("SELECT 1")
     app.use("/api/categories",category);;
     
     app.use("/images/category", express.static(path.join(__dirname, "uploads/category")));
+    app.use("/api/likeProduct", likeProductRoute);
 
     
     // Protected routes (authentication required)

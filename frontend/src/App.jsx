@@ -31,12 +31,16 @@ import SellerToAdmin from "./pages/SellerToAdmin";
 import Profile from "./pages/Profile";
 import EditProduct from "./pages/EditProduct";
 import CategoryProducts from "./pages/CategoryProducts";
+import LikedProducts from "./pages/LikedProducts";
+import { WishlistProvider } from "./contexts/WishlistProvider";
+import BlogPage from "./pages/BlogPage";
 
 // import CustomerDashboard from "./pages/CustomerDashboard";
 
 function App() {
   return (
     <BrowserRouter>
+    <WishlistProvider>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
@@ -49,6 +53,8 @@ function App() {
         <Route path="/product/details/:id" element={<Details />} />
         <Route path="/dashboard" element={<Profile/>}/>
         <Route path="/category/:category" element={<CategoryProducts />} />
+        <Route path="/liked-products" element={<LikedProducts/>}/>
+        <Route path="/blog" element={<BlogPage/>}/>
 
         
         
@@ -86,6 +92,7 @@ function App() {
         
 
       </Routes>
+      </WishlistProvider>
     </BrowserRouter>
   );
 }

@@ -150,7 +150,7 @@ const Header = () => {
 
                                 <div className='flex md-lg:hidden justify-center items-center gap-5'>
                                     <div className='flex justify-center gap-5'>
-                                        <div className='relative flex justify-center items-center cursor-pointer w-[35px] h-[35px] rounded-full bg-[#e2e2e2]'>
+                                        {/* <div className='relative flex justify-center items-center cursor-pointer w-[35px] h-[35px] rounded-full bg-[#e2e2e2]'>
                                             <span className='text-xl text-[#8A4FFF]'><FaHeart /></span>
                                             <div className='w-[20px] h-[20px] absolute bg-[#8A4FFF] rounded-full text-white flex justify-center items-center -top-[3px] -right-[5px] '>
                                                 {
@@ -158,7 +158,15 @@ const Header = () => {
                                                 }
 
                                             </div>
-                                        </div>
+                                        </div> */}
+                                        <Link to="/liked-products">
+    <div className='relative flex justify-center items-center cursor-pointer w-[35px] h-[35px] rounded-full bg-[#e2e2e2]'>
+        <span className='text-xl text-[#8A4FFF]'><FaHeart /></span>
+        <div className='w-[20px] h-[20px] absolute bg-[#8A4FFF] rounded-full text-white flex justify-center items-center -top-[3px] -right-[5px] '>
+            {wishlist_count}
+        </div>
+    </div>
+</Link>
 
                                         <Link to="/card">
                                             <div className='relative flex justify-center items-center cursor-pointer w-[35px] h-[35px] rounded-full bg-[#e2e2e2]'>

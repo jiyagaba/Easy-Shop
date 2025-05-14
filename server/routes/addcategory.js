@@ -1,13 +1,14 @@
 const express = require("express");
 const router = express.Router();
-const db = require("../db");
-const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
+const multer = require("multer");
+const db = require("../db");
 
 // Multer configuration for category image uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "../uploads/category")); // Save in /uploads/category
+    cb(null, path.join(__dirname, "../uploads/category"));
   },
   filename: (req, file, cb) => {
     cb(null, Date.now() + "-" + file.originalname);
@@ -69,25 +70,12 @@ router.get("/", async (req, res) => {
 --------------------------------------------------- */
 router.get("/:slug/products", async (req, res) => {
   const { slug } = req.params;
-  console.log("Received slug:", slug);
 
   try {
-    // Fetch products whose category name matches the given slug (case-insensitive)
     const [products] = await db.execute(
       "SELECT * FROM products WHERE LOWER(category) = ?",
       [slug.toLowerCase()]
     );
-    router.get("/:slug/products", async (req, res) => {
-  const { slug } = req.params;
-  console.log("Received slug:", slug);
-
-  try {
-    // Fetch products whose category name matches the given slug (case-insensitive)
-    const [products] = await db.execute(
-      "SELECT * FROM products WHERE LOWER(category) = ?",
-      [slug.toLowerCase()]
-    );
-    console.log("Products fetched:", products);
 
     if (products.length === 0) {
       return res.status(404).json({ message: `No products found in category '${slug}'` });
@@ -100,14 +88,71 @@ router.get("/:slug/products", async (req, res) => {
   }
 });
 
+/* ---------------------------------------------------
+   Update a category
+   PUT /api/categories/:id
+--------------------------------------------------- */
+router.put("/:id", upload.single("image"), async (req, res) => {
+  const { id } = req.params;
+  const { name, slug } = req.body;
+  const newImage = req.file ? `/images/category/${req.file.filename}` : null;
 
-    if (products.length === 0) {
-      return res.status(404).json({ message: `No products found in category '${slug}'` });
+  try {
+    const [existing] = await db.execute("SELECT * FROM categories WHERE id = ?", [id]);
+
+    if (existing.length === 0) {
+      return res.status(404).json({ message: "Category not found" });
     }
 
-    res.status(200).json(products);
+    const oldImage = existing[0].image;
+
+    const updatedImage = newImage || oldImage;
+    await db.execute(
+      "UPDATE categories SET name = ?, slug = ?, image = ? WHERE id = ?",
+      [name, slug, updatedImage, id]
+    );
+
+    // Delete old image from disk if new image uploaded
+    if (newImage && oldImage) {
+      const imagePath = path.join(__dirname, "../uploads/category", path.basename(oldImage));
+      fs.unlink(imagePath, (err) => {
+        if (err) console.error("Error deleting old image:", err.message);
+      });
+    }
+
+    res.json({ message: "Category updated successfully" });
   } catch (error) {
-    console.error("Error fetching products by category:", error.message);
+    console.error("Error updating category:", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+/* ---------------------------------------------------
+   Delete a category
+   DELETE /api/categories/:id
+--------------------------------------------------- */
+router.delete("/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const [existing] = await db.execute("SELECT * FROM categories WHERE id = ?", [id]);
+
+    if (existing.length === 0) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+
+    const imagePath = path.join(__dirname, "../uploads/category", path.basename(existing[0].image));
+
+    await db.execute("DELETE FROM categories WHERE id = ?", [id]);
+
+    // Delete image from disk
+    fs.unlink(imagePath, (err) => {
+      if (err) console.error("Error deleting image file:", err.message);
+    });
+
+    res.json({ message: "Category deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting category:", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
